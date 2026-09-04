@@ -823,7 +823,7 @@ svg {
 <body>
 <div id="beach-sand-toy" aria-label="Interactive beach sand">
   <style>
-    #beach-sand-toy{--sand:#c9a66b;position:relative;width:100%;height:clamp(440px,68vw,650px);min-height:440px;overflow:hidden;background:var(--sand);touch-action:none;user-select:none;-webkit-user-select:none}
+    html,html>body{width:100%;height:100%;margin:0!important;padding:0!important;overflow:hidden!important;background:#c9a66b!important}\n    #beach-sand-toy{--sand:#c9a66b;position:relative;width:100%;height:100dvh;min-height:100svh;overflow:hidden;background:var(--sand);touch-action:none;user-select:none;-webkit-user-select:none}
     #beach-sand-toy canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
     #beach-sand-toy .wave-layer{z-index:6;pointer-events:none}
     html.android-native,html.android-native>body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#c9a66b!important}
@@ -865,7 +865,7 @@ svg {
     #beach-sand-toy .debug-value{text-align:right;color:#ffd978}
     #beach-sand-toy .debug-actions{display:flex;flex:none;gap:6px;padding-top:10px;background:rgba(38,31,24,.94)}
     #beach-sand-toy .debug-actions button{flex:1 1 0;min-width:0;padding:7px 4px;border:1px solid #a98a4e;border-radius:8px;color:#fff6d5;background:#5b4b32}
-    @media(max-width:480px){#beach-sand-toy{height:560px;min-height:500px}}
+    @media(max-width:480px){#beach-sand-toy{height:100dvh;min-height:100svh}}
   </style>
   <canvas class="height-layer" role="img" aria-label="Sand that can be shaped with several fingers"></canvas>
   <canvas class="wave-layer" aria-hidden="true"></canvas>

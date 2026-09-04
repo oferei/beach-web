@@ -1,0 +1,1374 @@
+<!doctype html>
+<!-- Copyright © 2026 Ofer Reichman. All rights reserved. -->
+<html lang="en" data-visualize-standalone>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Beach Sand</title>
+<style>:root {
+  color-scheme: light dark;
+  background-color: transparent !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: var(
+    --main-surface-primary,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --foreground: light-dark(rgb(26 28 31), rgb(255 255 255));
+  --card: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --card-foreground: var(--foreground);
+  --popover: light-dark(rgb(255 255 255), rgb(45 45 45));
+  --popover-foreground: var(--foreground);
+  --primary: light-dark(rgb(51 156 255), rgb(131 195 255));
+  --primary-foreground: light-dark(rgb(255 255 255), rgb(13 13 13));
+  --secondary: light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%));
+  --secondary-foreground: var(--foreground);
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: light-dark(
+    rgb(26 28 31 / 49.4%),
+    rgb(255 255 255 / 49.8%)
+  );
+  --accent: light-dark(rgb(229 242 255), rgb(13 39 63));
+  --accent-foreground: var(--primary);
+  --destructive: light-dark(rgb(226 85 7), rgb(255 133 73));
+  --border: light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%));
+  --input: light-dark(
+    rgb(26 28 31 / 11.8%),
+    color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+  );
+  --ring: light-dark(rgb(51 156 255), rgb(131 195 255 / 76%));
+  --font-size-base: 14px;
+  --red: light-dark(rgb(186 38 35), rgb(250 66 62));
+  --green: light-dark(rgb(0 162 64), rgb(64 201 119));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, "Segoe UI", sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --radius: 10px;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17'%3E%3Cpath d='M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z'/%3E%3C/svg%3E");
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+  --color-background-primary: var(--background);
+  --color-text-primary: var(--foreground);
+  --color-border-secondary: var(--border);
+}
+
+:root[data-visualize-standalone] {
+  background-color: var(--background) !important;
+}
+
+/* Generic mobile code-block hosts provide light/dark mode but no series palette.
+   AppBlock hosts set all six variables themselves. */
+:root:not([data-app-block-surface]) {
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(#f3883b, #f59a56);
+  --viz-series-3: light-dark(#5dc977, #74d58b);
+  --viz-series-4: light-dark(#eb77b1, #f08fc0);
+  --viz-series-5: light-dark(#9b79ec, #aa91ef);
+  --viz-series-6: light-dark(#3ab9b1, #5acbc2);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html > body {
+  margin: 0;
+  padding: 5px;
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+:root:not([data-app-block-surface]) > body {
+  padding: 12px;
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive > .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align="right"]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align="center"]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget > :not(.card) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* The bundled tooltip runtime owns [data-tooltip]. AppBlock's CSS-only
+   pseudo-tooltip can widen dense grids even while hidden. */
+main [data-tooltip]::after {
+  content: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls > .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls > .form-label > :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--interactive-label-primary-default, var(--primary-foreground));
+  background: var(--interactive-bg-primary-default, var(--foreground));
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(
+    in srgb,
+    var(--interactive-label-primary-default, var(--primary-foreground)) 50%,
+    transparent
+  );
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type="file"] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type="file"]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type="file"]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type="color"] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type="color"]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type="checkbox"] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type="checkbox"]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type="checkbox"]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: "";
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type="radio"] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type="radio"]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: "";
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+    [aria-pressed="true"],
+    [aria-selected="true"],
+    .is-selected
+  ) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed="true"], [aria-selected="true"], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget > svg {
+  width: 100%;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+</style>
+</head>
+<body>
+<div id="beach-sand-toy" aria-label="Interactive beach sand">
+  <style>
+    #beach-sand-toy{--sand:#c9a66b;position:relative;width:100%;height:clamp(440px,68vw,650px);min-height:440px;overflow:hidden;background:var(--sand);touch-action:none;user-select:none;-webkit-user-select:none}
+    #beach-sand-toy canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+    #beach-sand-toy .wave-layer{z-index:6;pointer-events:none}
+    html.android-native,html.android-native>body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#c9a66b!important}
+    html.android-native #beach-sand-toy{width:100%!important;height:100%!important;min-height:100%!important}
+    #beach-sand-toy .settings-ui{position:absolute;z-index:5;top:calc(7px + env(safe-area-inset-top));right:calc(7px + env(safe-area-inset-right));width:296px;height:358px;perspective:820px;pointer-events:none;transform:translate(var(--shell-x,0px),var(--shell-y,0px)) rotate(var(--shell-angle,0deg)) perspective(var(--shell-press-perspective,360px)) rotateX(var(--shell-press-x,0deg)) rotateY(var(--shell-press-y,0deg));transform-origin:234px 60px;transform-style:preserve-3d;transition:none}
+    #beach-sand-toy .settings-ui.shell-transition{transition:transform 560ms cubic-bezier(.16,.78,.18,1)}
+    #beach-sand-toy .settings-ui.shell-open{z-index:7;transform:translate(var(--shell-open-x,0px),var(--shell-open-y,0px))}
+    #beach-sand-toy .settings-shell{position:absolute;top:0;right:0;width:296px;height:358px;pointer-events:none;transform:translate(108px,-15px) rotateZ(30deg) scale(.3);transform-origin:50% 10%;transform-style:preserve-3d;transition:transform 560ms cubic-bezier(.16,.78,.18,1)}
+    #beach-sand-toy .settings-lid{position:absolute;z-index:4;top:42px;right:3px;display:block;width:286px;height:286px;padding:0;border:0;border-radius:50%;outline:0;color:transparent;background:transparent;cursor:pointer;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transform:rotateX(0deg);transform-origin:50% 8%;transform-style:preserve-3d;filter:drop-shadow(0 -4px 3px rgba(56,34,17,.3));transition:transform 560ms cubic-bezier(.16,.78,.18,1),filter 260ms}
+    #beach-sand-toy .shell-face{position:absolute;inset:0;display:block;backface-visibility:hidden;pointer-events:none;transform-origin:50% 50%}
+    #beach-sand-toy .shell-face.outer{opacity:1;background:url("shell-sprite.webp") right center/200% 100% no-repeat;transform:rotateZ(180deg) translateZ(1px)}
+    #beach-sand-toy .shell-face.inner{opacity:0;background:url("shell-sprite.webp") left center/200% 100% no-repeat;transform:rotateZ(180deg) translateZ(2px)}
+    #beach-sand-toy .settings-shell.is-open .settings-lid{pointer-events:none;transform:rotateX(100deg);filter:drop-shadow(0 -7px 6px rgba(55,33,16,.22))}
+    #beach-sand-toy .settings-shell.is-open .shell-face.outer{opacity:0}
+    #beach-sand-toy .settings-shell.is-open .shell-face.inner{opacity:1}
+    #beach-sand-toy .settings-panel{position:absolute;z-index:2;top:42px;right:3px;box-sizing:border-box;width:286px;height:286px;padding:0;border:0;color:#4a3022;background:none;filter:drop-shadow(0 9px 7px rgba(59,35,17,.3));pointer-events:auto;opacity:0;transform:none;transform-origin:50% 18%;transition:opacity 180ms ease}
+    #beach-sand-toy .settings-panel::before{position:absolute;z-index:-1;inset:0;background:url("shell-sprite.webp") left center/200% 100% no-repeat;content:"";transform:rotate(180deg)}
+    #beach-sand-toy .settings-panel[hidden]{display:block;visibility:hidden;transition:visibility 0s 400ms,opacity 150ms ease,transform 340ms cubic-bezier(.5,0,.8,.2)}
+    #beach-sand-toy .settings-shell.is-open{transform:none}
+    #beach-sand-toy .settings-shell.is-open .settings-panel{opacity:1;transform:scale(1) translate(0,0) rotateX(0)}
+    #beach-sand-toy .settings-controls{position:absolute;z-index:1;inset:67px 46px 39px;overflow:hidden}
+    #beach-sand-toy .shell-control{position:relative;display:grid;grid-template-columns:32px minmax(0,1fr) 32px;align-items:center;gap:6px;height:60px;margin:0;color:#492f20;overflow:hidden}
+    #beach-sand-toy .shell-control+.shell-control{border-top:1px solid rgba(101,65,40,.1)}
+    #beach-sand-toy .shell-control:nth-child(3){margin-inline:10px}
+    #beach-sand-toy .shell-icon{display:grid;place-items:center;width:32px;height:40px;font:800 26px/1 system-ui,sans-serif;opacity:.96;text-shadow:0 1px 1px rgba(255,248,219,.95),0 0 4px rgba(255,244,213,.55)}
+    #beach-sand-toy .shell-icon.off{font-size:25px;opacity:.82}
+    #beach-sand-toy .shell-icon.dot{font-size:19px}
+    #beach-sand-toy .shell-control input{appearance:none;width:100%;height:30px;margin:0;outline:0;border:0;background:radial-gradient(ellipse at center,rgba(90,56,38,.25) 0 1px,transparent 2px) center/9px 4px repeat-x,linear-gradient(90deg,rgba(105,67,46,.43) 0 var(--fill,100%),rgba(111,75,54,.15) var(--fill,100%)) center/100% 3px no-repeat;accent-color:#765039;touch-action:none}
+    #beach-sand-toy .shell-control input::-webkit-slider-runnable-track{height:28px;background:transparent}
+    #beach-sand-toy .shell-control input::-webkit-slider-thumb{appearance:none;width:28px;height:27px;margin-top:1px;border:0;border-radius:57% 43% 48% 52%;background:radial-gradient(circle at 34% 28%,#f2e4cf,#c39a73 68%,#8b6449);box-shadow:0 2px 4px rgba(68,39,22,.28),inset 1px 1px rgba(255,247,224,.58);transform:rotate(-7deg)}
+    #beach-sand-toy .shell-control input:focus-visible{filter:drop-shadow(0 0 3px #fff4c5)}
+    #beach-sand-toy .debug-panel{position:absolute;z-index:7;top:calc(7px + env(safe-area-inset-top));right:calc(7px + env(safe-area-inset-right));display:flex;flex-direction:column;width:min(440px,calc(100vw - 46px - env(safe-area-inset-right)));max-height:calc(100vh - 52px - env(safe-area-inset-top) - env(safe-area-inset-bottom));box-sizing:border-box;overflow:hidden;padding:8px 10px;border:1px solid rgba(255,235,170,.55);border-radius:14px;color:#fff6d5;background:rgba(38,31,24,.94);box-shadow:0 12px 32px rgba(0,0,0,.42);font:500 12px ui-monospace,monospace;pointer-events:auto;touch-action:pan-y}
+    #beach-sand-toy .debug-panel[hidden]{display:none}
+    #beach-sand-toy .debug-copyright{flex:none;padding:2px 0 8px;color:rgba(255,246,213,.72);font-size:11px;text-align:center}
+    #beach-sand-toy .debug-scroll{min-height:0;overflow:auto;touch-action:pan-y}
+    #beach-sand-toy .debug-row{display:grid;grid-template-columns:minmax(120px,1fr) 48px minmax(120px,1.35fr);align-items:center;gap:6px;padding:4px 0;border-top:1px solid rgba(255,255,255,.1)}
+    #beach-sand-toy .debug-range-gesture{grid-column:3;display:block;width:100%;touch-action:none}
+    #beach-sand-toy .debug-row input{width:100%;pointer-events:none;accent-color:#e6bd62}
+    #beach-sand-toy .debug-value{text-align:right;color:#ffd978}
+    #beach-sand-toy .debug-actions{display:flex;flex:none;gap:6px;padding-top:10px;background:rgba(38,31,24,.94)}
+    #beach-sand-toy .debug-actions button{flex:1 1 0;min-width:0;padding:7px 4px;border:1px solid #a98a4e;border-radius:8px;color:#fff6d5;background:#5b4b32}
+    @media(max-width:480px){#beach-sand-toy{height:560px;min-height:500px}}
+  </style>
+  <canvas class="height-layer" role="img" aria-label="Sand that can be shaped with several fingers"></canvas>
+  <canvas class="wave-layer" aria-hidden="true"></canvas>
+  <div class="settings-ui">
+    <div class="settings-shell">
+      <button class="settings-button settings-lid" type="button" aria-label="Open shell settings" aria-expanded="false"><span class="shell-face outer" aria-hidden="true"></span><span class="shell-face inner" aria-hidden="true"></span></button>
+      <div class="settings-panel" hidden><div class="settings-controls">
+        <label class="shell-control" aria-label="Sound"><span class="shell-icon off" aria-hidden="true">×</span><input class="sound-slider" type="range" min="0" max="1" step="0.1" value="0.5"><span class="shell-icon" aria-hidden="true">♪</span></label>
+        <label class="shell-control" aria-label="Vibration"><span class="shell-icon off" aria-hidden="true">×</span><input class="haptics-slider" type="range" min="0" max="1" step="0.1" value="0.5"><span class="shell-icon" aria-hidden="true">≈</span></label>
+        <label class="shell-control" aria-label="Brush size"><span class="shell-icon dot" aria-hidden="true">●</span><input class="size-slider" type="range" min="0.8" max="2.6" step="0.1" value="1.7"><span class="shell-icon" aria-hidden="true">●</span></label>
+      </div></div>
+    </div>
+  </div>
+  <div class="debug-panel" hidden>
+    <div class="debug-copyright">Copyright © 2026 Ofer Reichman. All rights reserved.</div>
+    <div class="debug-scroll">
+      <label class="debug-row"><span>Angle of repose (°)</span><output class="debug-value" data-value="reposeAngle"></output><input data-debug="reposeAngle" type="range" min="25" max="50" step="1"></label>
+      <label class="debug-row"><span>Groove depth</span><output class="debug-value" data-value="grooveDepth"></output><input data-debug="grooveDepth" type="range" min="0.5" max="2.4" step="0.05"></label>
+      <label class="debug-row"><span>Profile curvature</span><output class="debug-value" data-value="profileCurvature"></output><input data-debug="profileCurvature" type="range" min="1.25" max="4" step="0.05"></label>
+      <label class="debug-row"><span>Forward push</span><output class="debug-value" data-value="forwardPush"></output><input data-debug="forwardPush" type="range" min="0" max="1" step="0.05"></label>
+      <label class="debug-row"><span>Scallop press tilt</span><output class="debug-value" data-value="shellPressTilt"></output><input data-debug="shellPressTilt" type="range" min="0" max="40" step="1"></label>
+      <label class="debug-row"><span>Scallop perspective</span><output class="debug-value" data-value="shellPressPerspective"></output><input data-debug="shellPressPerspective" type="range" min="180" max="1000" step="20"></label>
+      <label class="debug-row"><span>Scallop roundness</span><output class="debug-value" data-value="scallopRoundness"></output><input data-debug="scallopRoundness" type="range" min="0.25" max="1.25" step="0.05"></label>
+      <label class="debug-row"><span>Scallop groove depth</span><output class="debug-value" data-value="scallopGrooveDepth"></output><input data-debug="scallopGrooveDepth" type="range" min="0" max="1" step="0.05"></label>
+      <label class="debug-row"><span>Scallop groove radius</span><output class="debug-value" data-value="scallopGrooveRadius"></output><input data-debug="scallopGrooveRadius" type="range" min="0.2" max="1" step="0.05"></label>
+      <label class="debug-row"><span>Boundary cushion (px)</span><output class="debug-value" data-value="boundaryCushion"></output><input data-debug="boundaryCushion" type="range" min="16" max="128" step="4"></label>
+      <label class="debug-row"><span>Boundary damping (/s)</span><output class="debug-value" data-value="boundaryDamping"></output><input data-debug="boundaryDamping" type="range" min="0" max="20" step="0.5"></label>
+      <label class="debug-row"><span>Settling passes</span><output class="debug-value" data-value="settlingPasses"></output><input data-debug="settlingPasses" type="range" min="0" max="8" step="1"></label>
+      <label class="debug-row"><span>Finger size min</span><output class="debug-value" data-value="fingerSizeMin"></output><input data-debug="fingerSizeMin" type="range" min="0.5" max="1.6" step="0.05"></label>
+      <label class="debug-row"><span>Finger size max</span><output class="debug-value" data-value="fingerSizeMax"></output><input data-debug="fingerSizeMax" type="range" min="1.8" max="3.5" step="0.05"></label>
+      <label class="debug-row"><span>Finger step (r)</span><output class="debug-value" data-value="fingerStep"></output><input data-debug="fingerStep" type="range" min="0.05" max="0.5" step="0.05"></label>
+      <label class="debug-row"><span>Speed shallowing</span><output class="debug-value" data-value="speedDepthEffect"></output><input data-debug="speedDepthEffect" type="range" min="0" max="0.9" step="0.05"></label>
+      <label class="debug-row"><span>Finger settle (ms)</span><output class="debug-value" data-value="fingerSettleMs"></output><input data-debug="fingerSettleMs" type="range" min="100" max="2000" step="25"></label>
+      <label class="debug-row"><span>Depth transition (r)</span><output class="debug-value" data-value="depthTransition"></output><input data-debug="depthTransition" type="range" min="0.25" max="2" step="0.05"></label>
+      <label class="debug-row"><span>Water relax /s</span><output class="debug-value" data-value="waterRelax"></output><input data-debug="waterRelax" type="range" min="0" max="100" step="1"></label>
+      <label class="debug-row"><span>Water level recovery /s</span><output class="debug-value" data-value="waterLevelPull"></output><input data-debug="waterLevelPull" type="range" min="0" max="1" step="0.01"></label>
+      <label class="debug-row"><span>Dry relax /s</span><output class="debug-value" data-value="dryRelax"></output><input data-debug="dryRelax" type="range" min="0" max="30" step="0.1"></label>
+      <label class="debug-row"><span>Max volume</span><output class="debug-value" data-value="maxVolume"></output><input data-debug="maxVolume" type="range" min="1" max="200" step="1"></label>
+      <label class="debug-row"><span>Max vibration</span><output class="debug-value" data-value="maxVibration"></output><input data-debug="maxVibration" type="range" min="0.25" max="2.5" step="0.05"></label>
+      <label class="debug-row"><span>Preview pulse (ms)</span><output class="debug-value" data-value="hapticPreviewMs"></output><input data-debug="hapticPreviewMs" type="range" min="1" max="500" step="1"></label>
+      <label class="debug-row"><span>Screen awake (min)</span><output class="debug-value" data-value="screenAwakeMinutes"></output><input data-debug="screenAwakeMinutes" type="range" min="0.5" max="10" step="0.5"></label>
+    </div>
+      <div class="debug-actions"><button class="debug-wave" type="button">Wave now</button><button class="debug-big-wave" type="button">Big wave</button><button class="debug-reset" type="button">Reset</button></div>
+  </div>
+  <script src="audio-model.js"></script>
+  <script>
+  (function(){
+    "use strict";
+    const root=document.getElementById("beach-sand-toy");
+    if(!root||root.dataset.ready==="true")return;root.dataset.ready="true";
+    if(window.AndroidHaptics)document.documentElement.classList.add("android-native");
+    const hc=root.querySelector(".height-layer"),wc=root.querySelector(".wave-layer"),wave=wc.getContext("2d");
+    const settingsUi=root.querySelector(".settings-ui"),settingsShell=root.querySelector(".settings-shell"),settingsButton=root.querySelector(".settings-button"),settingsPanel=root.querySelector(".settings-panel"),debugPanel=root.querySelector(".debug-panel");
+    const soundSlider=root.querySelector(".sound-slider"),hapticsSlider=root.querySelector(".haptics-slider"),sizeSlider=root.querySelector(".size-slider");
+    let W=1,H=1,dpr=1,raf=0,last=performance.now(),clock=0,waveAge=0,waterTop=Infinity,previousWaterTop=Infinity,waveSpeed=0,waterPhase=0,baselineY=1,wetFront=1,paused=false;
+    const settingsRevisionKey="tactile-sand-settings-revision";
+    if(localStorage.getItem(settingsRevisionKey)!=="25"){if(localStorage.getItem("tactile-sand-sound-level")!=="0")localStorage.setItem("tactile-sand-sound-level","0.5");if(localStorage.getItem("tactile-sand-haptics-level")!=="0")localStorage.setItem("tactile-sand-haptics-level","0.5");localStorage.setItem(settingsRevisionKey,"25")}
+    let soundLevel=Math.max(0,Math.min(1,Number(localStorage.getItem("tactile-sand-sound-level")??(localStorage.getItem("tactile-sand-sound")==="off"?0:.5))));
+    let hapticsLevel=Math.max(0,Math.min(1,Number(localStorage.getItem("tactile-sand-haptics-level")??(localStorage.getItem("tactile-sand-haptics")==="off"?0:.5))));
+    let brushScale=Math.max(.7,Math.min(1.7,Number(localStorage.getItem("tactile-sand-size"))||1.7));
+    const debugDefaults={reposeAngle:34,grooveDepth:1.46,profileCurvature:2,forwardPush:.4,shellPressTilt:26,shellPressPerspective:360,scallopRoundness:.9,scallopGrooveDepth:.25,scallopGrooveRadius:.7,boundaryCushion:72,boundaryDamping:6,settlingPasses:2,fingerSizeMin:.8,fingerSizeMax:2.6,fingerStep:.1,speedDepthEffect:.55,fingerSettleMs:450,depthTransition:.75,waterRelax:30,waterLevelPull:.1,dryRelax:5,maxVolume:120,maxVibration:1.2,hapticPreviewMs:24,screenAwakeMinutes:2};
+    let debugParams={...debugDefaults};try{debugParams={...debugParams,...JSON.parse(localStorage.getItem("tactile-sand-debug")||"{}")}}catch(e){}
+    
+    const debugRevisionKey="tactile-sand-debug-revision";if(localStorage.getItem(debugRevisionKey)!=="73"){debugParams.forwardPush=.4;debugParams.settlingPasses=2;debugParams.maxVolume=120;debugParams.waterRelax=30;debugParams.dryRelax=5;debugParams.hapticPreviewMs=24;debugParams.waterLevelPull=.1;debugParams.grooveDepth=1.72;debugParams.fingerSizeMin=.8;debugParams.fingerSizeMax=2.6;if(!Number.isFinite(debugParams.dryRelax))debugParams.dryRelax=.8;if(!Number.isFinite(debugParams.fingerStep))debugParams.fingerStep=.1;if(!Number.isFinite(debugParams.speedDepthEffect))debugParams.speedDepthEffect=.55;debugParams.fingerSettleMs=450;if(!Number.isFinite(debugParams.depthTransition))debugParams.depthTransition=.75;if(!Number.isFinite(debugParams.reposeAngle))debugParams.reposeAngle=34;localStorage.setItem(debugRevisionKey,"73")}delete debugParams.wallReach;delete debugParams.transportPadding;const scallopRevisionKey="tactile-sand-debug-scallop-revision";if(localStorage.getItem(scallopRevisionKey)!=="85"){debugParams.scallopRoundness=.9;debugParams.scallopGrooveDepth=.25;debugParams.scallopGrooveRadius=.7;localStorage.setItem(scallopRevisionKey,"85")}const shellPressRevisionKey="tactile-sand-debug-shell-press-revision";if(localStorage.getItem(shellPressRevisionKey)!=="90"){debugParams.shellPressTilt=26;localStorage.setItem(shellPressRevisionKey,"90")}debugParams.reposeAngle=Math.max(25,Math.min(50,Number(debugParams.reposeAngle)||34));debugParams.profileCurvature=Math.max(1.25,Math.min(4,Number(debugParams.profileCurvature)||2));debugParams.forwardPush=Math.max(0,Math.min(1,Number(debugParams.forwardPush)??.4));debugParams.shellPressTilt=Math.max(0,Math.min(40,Number(debugParams.shellPressTilt)??26));debugParams.shellPressPerspective=Math.max(180,Math.min(1000,Number(debugParams.shellPressPerspective)||360));debugParams.scallopRoundness=Math.max(.25,Math.min(1.25,Number(debugParams.scallopRoundness)||.75));const scallopDepth=Number(debugParams.scallopGrooveDepth);debugParams.scallopGrooveDepth=Math.max(0,Math.min(1,Number.isFinite(scallopDepth)?scallopDepth:.25));debugParams.scallopGrooveRadius=Math.max(.2,Math.min(1,Number(debugParams.scallopGrooveRadius)||.7));debugParams.boundaryCushion=Math.max(16,Math.min(128,Number(debugParams.boundaryCushion)||72));debugParams.boundaryDamping=Math.max(0,Math.min(20,Number(debugParams.boundaryDamping)??6));debugParams.settlingPasses=Math.max(0,Math.min(8,Math.round(Number(debugParams.settlingPasses)??2)));debugParams.fingerSizeMin=Math.max(.5,Math.min(1.6,Number(debugParams.fingerSizeMin)||.8));debugParams.fingerSizeMax=Math.max(debugParams.fingerSizeMin+.2,Math.min(3.5,Number(debugParams.fingerSizeMax)||2.6));debugParams.fingerStep=Math.max(.05,Math.min(.5,Number(debugParams.fingerStep)||.1));debugParams.speedDepthEffect=Math.max(0,Math.min(.9,Number(debugParams.speedDepthEffect)??.55));debugParams.fingerSettleMs=Math.max(100,Math.min(2000,Number(debugParams.fingerSettleMs)||450));debugParams.depthTransition=Math.max(.25,Math.min(2,Number(debugParams.depthTransition)||.75));debugParams.waterRelax=Math.max(0,Math.min(100,Number(debugParams.waterRelax)||0));debugParams.dryRelax=Math.max(0,Math.min(30,Number(debugParams.dryRelax)||0));debugParams.maxVolume=Math.max(1,Math.min(200,Number(debugParams.maxVolume)||1));debugParams.hapticPreviewMs=Math.max(1,Math.min(500,Math.round(Number(debugParams.hapticPreviewMs)||24)));debugParams.waterLevelPull=Math.max(0,Math.min(1,Number(debugParams.waterLevelPull)||0));debugParams.screenAwakeMinutes=Math.max(.5,Math.min(10,Number(debugParams.screenAwakeMinutes)||2));brushScale=Math.max(debugParams.fingerSizeMin,Math.min(debugParams.fingerSizeMax,brushScale));sizeSlider.min=String(debugParams.fingerSizeMin);sizeSlider.max=String(debugParams.fingerSizeMax);localStorage.setItem("tactile-sand-debug",JSON.stringify(debugParams))
+    let ac=null,sandGain=null,sandFilter=null,sandPreviewGain=null,sandPreviewFilter=null,waveGain=null,splashGain=null,splashFilter=null,hapticMedium="",lastSplashAtMs=-Infinity;
+    let previousWaveF=0,testSeed=0;const pointers=new Map();soundSlider.value=String(soundLevel);hapticsSlider.value=String(hapticsLevel);sizeSlider.value=String(brushScale);
+    const shellMotion={x:0,y:0,angle:0,vx:0,vy:0,angularVelocity:0},shellPress={owner:null,contacts:new Map(),targetX:0,targetY:0,x:0,y:0,vx:0,vy:0};let shellTransitionTimer=0,shellTransitioning=false,shellTrailPoint=null,shellTrailWait=0;
+    function syncShellPose(){settingsUi.style.setProperty("--shell-x",`${shellMotion.x}px`);settingsUi.style.setProperty("--shell-y",`${shellMotion.y}px`);settingsUi.style.setProperty("--shell-angle",`${shellMotion.angle}deg`)}
+    function clearShellPress(){clearTimeout(debugHold);shellPress.owner=null;shellPress.contacts.clear();shellPress.targetX=0;shellPress.targetY=0}
+    function advanceShellPress(dt){const stiffness=190,damping=Math.exp(-dt*18);shellPress.vx=(shellPress.vx+(shellPress.targetX-shellPress.x)*stiffness*dt)*damping;shellPress.vy=(shellPress.vy+(shellPress.targetY-shellPress.y)*stiffness*dt)*damping;shellPress.x+=shellPress.vx*dt;shellPress.y+=shellPress.vy*dt;if(Math.abs(shellPress.x)<.002&&Math.abs(shellPress.vx)<.01)shellPress.x=shellPress.vx=0;if(Math.abs(shellPress.y)<.002&&Math.abs(shellPress.vy)<.01)shellPress.y=shellPress.vy=0;settingsUi.style.setProperty("--shell-press-x",`${shellPress.x}deg`);settingsUi.style.setProperty("--shell-press-y",`${shellPress.y}deg`)}
+    function shellCollider(){const rect=settingsButton.getBoundingClientRect();return{x:(rect.left+rect.right)/2,y:(rect.top+rect.bottom)/2,radius:Math.min(rect.width,rect.height)*.48}}
+    function pushShellFromStroke(fromX,fromY,toX,toY,elapsedMs){if(!settingsPanel.hidden||!debugPanel.hidden||shellTransitioning)return false;const collider=shellCollider(),cx=collider.x,cy=collider.y,radius=collider.radius,collisionRadius=radius+14,dx=toX-fromX,dy=toY-fromY,length2=dx*dx+dy*dy;if(length2<1)return false;const fx=fromX-cx,fy=fromY-cy,b=2*(fx*dx+fy*dy),c=fx*fx+fy*fy-collisionRadius*collisionRadius,discriminant=b*b-4*length2*c;let hitT=-1;if(discriminant>=0){const entry=(-b-Math.sqrt(discriminant))/(2*length2);if(entry>=0&&entry<=1)hitT=entry}const closestT=Math.max(0,Math.min(1,-(fx*dx+fy*dy)/length2)),contactT=hitT>=0?hitT:c<=0?0:closestT,contactX=fromX+dx*contactT,contactY=fromY+dy*contactT,outX=contactX-cx,outY=contactY-cy,contactDistance=Math.hypot(outX,outY);if(hitT<0&&contactDistance>collisionRadius)return false;let inwardX,inwardY;if(contactDistance>.001){inwardX=-outX/contactDistance;inwardY=-outY/contactDistance}else{const travel=Math.sqrt(length2);inwardX=dx/travel;inwardY=dy/travel}const approach=dx*inwardX+dy*inwardY;if(approach<=.05)return true;const elapsed=Math.max(6,Math.min(40,elapsedMs)),fingerNormalSpeed=approach*1000/elapsed,targetNormalSpeed=Math.min(340,fingerNormalSpeed*.82),currentNormalSpeed=shellMotion.vx*inwardX+shellMotion.vy*inwardY,normalDelta=Math.max(0,targetNormalSpeed-currentNormalSpeed)*.58;shellMotion.vx=Math.max(-340,Math.min(340,shellMotion.vx+inwardX*normalDelta));shellMotion.vy=Math.max(-340,Math.min(340,shellMotion.vy+inwardY*normalDelta));const tangentX=-inwardY,tangentY=inwardX,fingerTangentSpeed=(dx*tangentX+dy*tangentY)*1000/elapsed,targetAngular=Math.max(-140,Math.min(140,-fingerTangentSpeed/radius*40));shellMotion.angularVelocity+= (targetAngular-shellMotion.angularVelocity)*.42;return true}
+    function softenBoundaryVelocity(velocity,clearance,inward,dt){if(velocity*inward>=0)return velocity;const zone=debugParams.boundaryCushion,pressure=Math.max(0,Math.min(1,1-clearance/zone));if(pressure<=0)return velocity;const outward=-velocity*inward,damped=outward*Math.exp(-dt*debugParams.boundaryDamping*pressure*pressure);return-inward*damped}
+    function advanceShellMotion(dt){if(!settingsPanel.hidden||!debugPanel.hidden||shellTransitioning)return;const damping=Math.exp(-dt*3.4),angularDamping=Math.exp(-dt*4.5);shellMotion.vx*=damping;shellMotion.vy*=damping;shellMotion.angularVelocity*=angularDamping;if(Math.abs(shellMotion.vx)<.2)shellMotion.vx=0;if(Math.abs(shellMotion.vy)<.2)shellMotion.vy=0;if(Math.abs(shellMotion.angularVelocity)<.2)shellMotion.angularVelocity=0;const bounds=root.getBoundingClientRect(),before=settingsButton.getBoundingClientRect(),pad=4;shellMotion.vx=softenBoundaryVelocity(shellMotion.vx,before.left-bounds.left-pad,1,dt);shellMotion.vx=softenBoundaryVelocity(shellMotion.vx,bounds.right-pad-before.right,-1,dt);shellMotion.vy=softenBoundaryVelocity(shellMotion.vy,before.top-bounds.top-pad,1,dt);shellMotion.vy=softenBoundaryVelocity(shellMotion.vy,bounds.bottom-pad-before.bottom,-1,dt);shellMotion.x+=shellMotion.vx*dt;shellMotion.y+=shellMotion.vy*dt;shellMotion.angle=((shellMotion.angle+shellMotion.angularVelocity*dt+180)%360+360)%360-180;syncShellPose();const after=settingsButton.getBoundingClientRect();let correctionX=0,correctionY=0;if(after.left<bounds.left+pad)correctionX=bounds.left+pad-after.left;else if(after.right>bounds.right-pad)correctionX=bounds.right-pad-after.right;if(after.top<bounds.top+pad)correctionY=bounds.top+pad-after.top;else if(after.bottom>bounds.bottom-pad)correctionY=bounds.bottom-pad-after.bottom;if(correctionX){shellMotion.x+=correctionX;shellMotion.vx=correctionX>0?Math.max(0,-shellMotion.vx*.18):Math.min(0,-shellMotion.vx*.18)}if(correctionY){shellMotion.y+=correctionY;shellMotion.vy=correctionY>0?Math.max(0,-shellMotion.vy*.18):Math.min(0,-shellMotion.vy*.18)}if(correctionX||correctionY)syncShellPose();const finalCollider=shellCollider(),trailTo={x:finalCollider.x-bounds.left,y:finalCollider.y-bounds.top};updateShellTrail(trailTo,finalCollider.radius,dt)}
+    function beginShellTransition(){clearTimeout(shellTransitionTimer);shellTransitioning=true;settingsUi.classList.add("shell-transition");shellTransitionTimer=setTimeout(()=>{shellTransitioning=false;settingsUi.classList.remove("shell-transition")},620)}
+    syncShellPose();
+    function syncSliderFill(input){const min=Number(input.min),max=Number(input.max),fill=(Number(input.value)-min)/Math.max(.001,max-min)*100;input.style.setProperty("--fill",`${fill}%`)}
+    function setRangeFromPointer(input,clientX){const rect=input.getBoundingClientRect(),min=Number(input.min)||0,max=Number(input.max)||100,step=Number(input.step)||1,ratio=Math.max(0,Math.min(1,(clientX-rect.left)/Math.max(1,rect.width))),value=Math.max(min,Math.min(max,min+Math.round((max-min)*ratio/step)*step)),decimals=(String(input.step).split(".")[1]||"").length,next=value.toFixed(decimals);if(input.value!==next){input.value=next;input.dispatchEvent(new Event("input",{bubbles:true}))}}
+    function installSmoothRange(input){let pointerId=null;input.addEventListener("pointerdown",e=>{pointerId=e.pointerId;try{input.setPointerCapture(pointerId)}catch(error){}setRangeFromPointer(input,e.clientX);e.preventDefault()});input.addEventListener("pointermove",e=>{if(e.pointerId!==pointerId)return;setRangeFromPointer(input,e.clientX);e.preventDefault()});const finish=e=>{if(e.pointerId===pointerId)pointerId=null};input.addEventListener("pointerup",finish);input.addEventListener("pointercancel",finish);input.addEventListener("lostpointercapture",()=>pointerId=null)}
+function installIntentRange(input){let pointerId=null,startX=0,startY=0,startScrollTop=0,intent="";const scrollHost=input.closest(".debug-scroll"),gesture=document.createElement("span");gesture.className="debug-range-gesture";input.replaceWith(gesture);gesture.appendChild(input);gesture.addEventListener("pointerdown",e=>{pointerId=e.pointerId;startX=e.clientX;startY=e.clientY;startScrollTop=scrollHost?scrollHost.scrollTop:0;intent="";try{gesture.setPointerCapture(pointerId)}catch(error){}e.preventDefault()});gesture.addEventListener("pointermove",e=>{if(e.pointerId!==pointerId)return;const dx=e.clientX-startX,dy=e.clientY-startY;if(!intent&&Math.hypot(dx,dy)>=8)intent=Math.abs(dx)>Math.abs(dy)*1.15?"slider":"scroll";if(intent==="slider")setRangeFromPointer(input,e.clientX);else if(intent==="scroll"&&scrollHost)scrollHost.scrollTop=startScrollTop-dy;e.preventDefault()});const finish=e=>{if(e.pointerId===pointerId){pointerId=null;intent=""}};gesture.addEventListener("pointerup",finish);gesture.addEventListener("pointercancel",finish);gesture.addEventListener("lostpointercapture",()=>{pointerId=null;intent=""})}
+    function setDebugOpen(open){debugPanel.hidden=!open}
+    function positionOpenShell(closedRect){const bounds=root.getBoundingClientRect(),style=getComputedStyle(settingsUi),width=settingsUi.offsetWidth,height=settingsUi.offsetHeight,inset=4,baseLeft=bounds.right-parseFloat(style.right)-width,baseTop=bounds.top+parseFloat(style.top),closedCenterX=(closedRect.left+closedRect.right)/2,closedCenterY=(closedRect.top+closedRect.bottom)/2,desiredLeft=Math.max(bounds.left+inset,Math.min(bounds.right-inset-width,closedCenterX-width/2)),desiredTop=Math.max(bounds.top+inset,Math.min(bounds.bottom-inset-height,closedCenterY-height/2));settingsUi.style.setProperty("--shell-open-x",`${desiredLeft-baseLeft}px`);settingsUi.style.setProperty("--shell-open-y",`${desiredTop-baseTop}px`)}
+    function setShellOpen(open){if(open){setDebugOpen(false);clearShellPress()}const changed=(!settingsPanel.hidden)!==open;if(changed){const closedRect=settingsButton.getBoundingClientRect();beginShellTransition();if(open){shellMotion.vx=shellMotion.vy=shellMotion.angularVelocity=0;positionOpenShell(closedRect)}}settingsPanel.hidden=!open;settingsShell.classList.toggle("is-open",open);settingsUi.classList.toggle("shell-open",open);settingsButton.setAttribute("aria-expanded",String(open));settingsButton.setAttribute("aria-label",open?"Close shell settings":"Open shell settings")}
+    for(const input of [soundSlider,hapticsSlider,sizeSlider]){syncSliderFill(input);installSmoothRange(input)}
+
+    const testMode=new URLSearchParams(location.search).has("test");
+    const {sandAudioParams,splashAudioParams,volumeScale}=window.BeachAudioModel;
+    const startupWaveDelay=2+random01()*3;let waveSpec=newWaveSpec(false,false);waveAge=Math.max(0,waveSpec.duration*.38-startupWaveDelay);
+    const gl=hc.getContext("webgl2",{alpha:false,antialias:false,preserveDrawingBuffer:testMode});
+    if(!gl||!gl.getExtension("EXT_color_buffer_float")){root.style.background="#c9a66b";return}
+    const vs=`#version 300 es
+      in vec2 p;out vec2 uv;void main(){uv=p*.5+.5;gl_Position=vec4(p,0.,1.);}`;
+    const updateFs=`#version 300 es
+      precision highp float;
+      uniform sampler2D src;
+      uniform vec2 size,a,b,cpoint,strokePoints[32],motionDir;
+      uniform vec4 updateBounds;
+      uniform float strokeStrengths[32];
+      uniform int strokePointCount;
+      uniform float radius,strength,mode,waterY,waterPhase,waveSeed,waveAmp,baselineY,wetFront,reposeAngle,grooveDepth,profileCurvature,forwardPush,waterLevelDose;
+      in vec2 uv;out vec4 outColor;
+      const ivec2 neighborOffsets[8]=ivec2[8](ivec2(1,0),ivec2(1,1),ivec2(0,1),ivec2(-1,1),ivec2(-1,0),ivec2(-1,-1),ivec2(0,-1),ivec2(1,-1));
+      const vec2 supportDirections[6]=vec2[6](vec2(1,0),vec2(.5,.866),vec2(-.5,.866),vec2(-1,0),vec2(-.5,-.866),vec2(.5,-.866));
+      vec2 fieldUv(vec2 point){return vec2(point.x/size.x,1.-point.y/size.y);}
+      float fingertipDistance(vec2 point,out vec2 pathPoint,out float pathStrength){float distanceToPath=1e6;pathPoint=strokePoints[0];pathStrength=strokeStrengths[0];if(strokePointCount==1)return length(point-pathPoint);for(int i=1;i<32;i++){if(i>=strokePointCount)break;vec2 start=strokePoints[i-1],segment=strokePoints[i]-start;float lengthSquared=dot(segment,segment);if(lengthSquared<.000001)continue;float along=clamp(dot(point-start,segment)/lengthSquared,0.,1.);vec2 candidate=start+segment*along;float candidateDistance=length(point-candidate);if(candidateDistance<distanceToPath){distanceToPath=candidateDistance;pathPoint=candidate;pathStrength=mix(strokeStrengths[i-1],strokeStrengths[i],along);}}return distanceToPath;}
+      float terrainReference(vec2 pathPoint,float depth){float supportRadius=radius*1.72,innerRadius=radius*.55,pair0=(texture(src,fieldUv(pathPoint+supportDirections[0]*supportRadius)).r+texture(src,fieldUv(pathPoint+supportDirections[3]*supportRadius)).r)*.5+.5,pair1=(texture(src,fieldUv(pathPoint+supportDirections[1]*supportRadius)).r+texture(src,fieldUv(pathPoint+supportDirections[4]*supportRadius)).r)*.5+.5,pair2=(texture(src,fieldUv(pathPoint+supportDirections[2]*supportRadius)).r+texture(src,fieldUv(pathPoint+supportDirections[5]*supportRadius)).r)*.5+.5,outerSupport=min(.5,max(pair0,max(pair1,pair2))),nearbyFloor=texture(src,fieldUv(pathPoint)).r+.5,inner0=(texture(src,fieldUv(pathPoint+supportDirections[0]*innerRadius)).r+texture(src,fieldUv(pathPoint+supportDirections[3]*innerRadius)).r)*.5+.5,inner1=(texture(src,fieldUv(pathPoint+supportDirections[1]*innerRadius)).r+texture(src,fieldUv(pathPoint+supportDirections[4]*innerRadius)).r)*.5+.5,inner2=(texture(src,fieldUv(pathPoint+supportDirections[2]*innerRadius)).r+texture(src,fieldUv(pathPoint+supportDirections[5]*innerRadius)).r)*.5+.5,innerSupport=min(inner0,min(inner1,inner2));float localSupport=mix(nearbyFloor,innerSupport,.45),moundLift=max(0.,innerSupport-outerSupport);return min(outerSupport+moundLift*.8,localSupport+depth*.78);}
+      void radialFingertip(vec2 point,out float fingertipSurface,out float normalizedDistance){vec2 pathPoint;float pathStrength;normalizedDistance=fingertipDistance(point,pathPoint,pathStrength)/max(radius,.001);float depthVariation=1.+.045*sin(pathPoint.x*.021+pathPoint.y*.013)+.025*sin(pathPoint.x*.047-pathPoint.y*.018),depth=pathStrength*grooveDepth*.34*depthVariation,localSurface=terrainReference(pathPoint,depth);fingertipSurface=max(.08,localSurface+depth*(3.*pow(normalizedDistance,profileCurvature)-1.));}
+      bool validCell(ivec2 cell,ivec2 grid){return all(greaterThanEqual(cell,ivec2(0)))&&all(lessThan(cell,grid));}
+      bool inUpdateBounds(ivec2 cell){return float(cell.x)>=updateBounds.x&&float(cell.y)>=updateBounds.y&&float(cell.x)<updateBounds.z&&float(cell.y)<updateBounds.w;}
+      vec2 cellPoint(ivec2 cell,ivec2 grid){return vec2((float(cell.x)+.5)/float(grid.x)*size.x,(1.-(float(cell.y)+.5)/float(grid.y))*size.y);}
+      float mobileSand(ivec2 cell,ivec2 grid){if(!validCell(cell,grid)||!inUpdateBounds(cell))return 0.;return max(0.,texelFetch(src,cell,0).b);}
+      float pushFraction(ivec2 source,ivec2 destination,ivec2 grid){if(!validCell(source,grid)||!validCell(destination,grid)||!inUpdateBounds(source)||!inUpdateBounds(destination))return 0.;vec2 sourcePoint=cellPoint(source,grid),segment=b-a;float along=dot(segment,segment)>.000001?clamp(dot(sourcePoint-a,segment)/dot(segment,segment),0.,1.):0.;vec2 pathPoint=a+segment*along,outward=vec2(sourcePoint.x-pathPoint.x,pathPoint.y-sourcePoint.y),move=motionDir;float blend=forwardPush*step(.001,length(move));vec2 preferred=mix(outward,move*max(length(outward),1.),blend);if(length(preferred)<.001){float count=0.;for(int i=0;i<8;i++){ivec2 target=source+neighborOffsets[i];if(validCell(target,grid)&&inUpdateBounds(target))count+=1.;}return 1./max(count,1.);}preferred=normalize(preferred);vec2 direction=normalize(vec2(destination-source));float weight=.001+pow(max(0.,dot(direction,preferred)),2.),total=0.;for(int i=0;i<8;i++){ivec2 target=source+neighborOffsets[i];if(!validCell(target,grid)||!inUpdateBounds(target))continue;vec2 candidate=normalize(vec2(target-source));total+=.001+pow(max(0.,dot(candidate,preferred)),2.);}return weight/max(total,.000001);}
+      bool fingerProtected(ivec2 cell,ivec2 grid){return validCell(cell,grid)&&texelFetch(src,cell,0).a>.5;}
+      float escapingSand(ivec2 cell,ivec2 grid){if(!validCell(cell,grid)||!inUpdateBounds(cell))return 0.;return mobileSand(cell,grid)*step(.5,texelFetch(src,cell,0).a);}
+      float settleTransfer(ivec2 source,ivec2 destination,ivec2 grid,float stableStep){if(!validCell(source,grid)||!validCell(destination,grid)||!inUpdateBounds(source)||!inUpdateBounds(destination))return 0.;float sourceMobile=mobileSand(source,grid);if(sourceMobile<=.000001)return 0.;float sourceHeight=texelFetch(src,source,0).r+.5,destinationHeight=texelFetch(src,destination,0).r+.5,distance=length(vec2(destination-source)),excess=max(sourceHeight-destinationHeight-stableStep*distance,0.)/distance;if(excess<=0.||fingerProtected(destination,grid))return 0.;return min(sourceMobile*.42,excess*.42);}
+      float waterMask(vec2 point){float crest=waterY+sin(point.x*(.018+fract(waveSeed*.17)*.016)+waterPhase*6.7+waveSeed)*waveAmp+sin(point.x*(.052+fract(waveSeed*.31)*.025)-waterPhase*5.3+waveSeed*2.1)*waveAmp*.46+sin(point.x*.117+waterPhase*9.1-waveSeed*.7)*waveAmp*.18;return smoothstep(crest,crest+64.,point.y);}
+      void main(){ivec2 grid=textureSize(src,0),cell=clamp(ivec2(gl_FragCoord.xy),ivec2(0),grid-1),north=min(cell+ivec2(0,1),grid-1),south=max(cell-ivec2(0,1),ivec2(0)),east=min(cell+ivec2(1,0),grid-1),west=max(cell-ivec2(1,0),ivec2(0));vec2 pixelStep=size/vec2(grid);vec4 c=texelFetch(src,cell,0);float h=c.r+.5,w=c.g,contactSurface=c.b,contactMask=c.a;vec2 px=vec2(uv.x*size.x,(1.-uv.y)*size.y);
+        float n=texelFetch(src,north,0).r+.5,s=texelFetch(src,south,0).r+.5,e=texelFetch(src,east,0).r+.5,ww=texelFetch(src,west,0).r+.5;
+        if(mode<.5){float fingertipSurface,normalizedDistance;radialFingertip(px,fingertipSurface,normalizedDistance);float removed=max(0.,h-fingertipSurface);contactSurface=removed;}
+        else if(mode<1.5){float removed=escapingSand(cell,grid),incoming=0.;for(int i=0;i<8;i++){ivec2 source=cell-neighborOffsets[i];incoming+=escapingSand(source,grid)*pushFraction(source,cell,grid);}h+=incoming-removed;contactSurface+=incoming-removed;}
+        else if(mode<2.5){float reposeStep=tan(reposeAngle*.01745329252)/46.;if(radius>.001){float outgoing=0.,incoming=0.,dose=clamp(strength,0.,.45);for(int i=0;i<8;i++){ivec2 destination=cell+neighborOffsets[i],source=cell-neighborOffsets[i];outgoing+=settleTransfer(cell,destination,grid,reposeStep);incoming+=settleTransfer(source,cell,grid,reposeStep);}h+=dose*(incoming-outgoing);contactSurface+=dose*(incoming-outgoing);}else{float dryness=1.-smoothstep(.05,.35,w),granularFlux=0.;for(int i=0;i<8;i++){ivec2 neighbor=cell+neighborOffsets[i];if(!validCell(neighbor,grid)||!inUpdateBounds(neighbor))continue;vec4 neighborCell=texelFetch(src,neighbor,0);float neighborHeight=neighborCell.r+.5,neighborDryness=1.-smoothstep(.05,.35,neighborCell.g),difference=neighborHeight-h,stableStep=reposeStep*length(vec2(neighborOffsets[i])),excess=max(abs(difference)-stableStep,0.),contactGate=(1.-contactMask)*(1.-neighborCell.a);granularFlux+=sign(difference)*excess*min(dryness,neighborDryness)*contactGate;}h+=clamp(strength,0.,.45)*granularFlux*.125;float baseEdge=baselineY+sin(px.x*.021+waveSeed)*5.+sin(px.x*.063-waveSeed*.8)*2.;float frontEdge=wetFront+sin(px.x*.013+waveSeed*1.7)*15.+sin(px.x*.041-waveSeed)*7.+sin(px.x*.089+waveSeed*.4)*3.;float permanent=smoothstep(baseEdge-52.,baseEdge+38.,px.y);float inland=clamp((baselineY-px.y)/max(size.y*.55,1.),0.,1.);float uncovered=1.-smoothstep(frontEdge-58.,frontEdge+28.,px.y);float dryVariation=.82+.18*sin(px.x*.031+px.y*.017+waveSeed)+.12*sin(px.x*.079-px.y*.026);float dryRate=(.00048+inland*.00058+uncovered*.00016)*dryVariation;float wn=texelFetch(src,north,0).g,ws=texelFetch(src,south,0).g,we=texelFetch(src,east,0).g,wwet=texelFetch(src,west,0).g;float wetAvg=(wn+ws+we+wwet)*.25;w=max(permanent,mix(w,wetAvg,.035)-dryRate);}}
+        else if(mode<3.5){float wetEdge=waterMask(px);float mn=waterMask(px+vec2(0.,-pixelStep.y)),ms=waterMask(px+vec2(0.,pixelStep.y)),me=waterMask(px+vec2(pixelStep.x,0.)),mw=waterMask(px-vec2(pixelStep.x,0.));float wnMask=min(wetEdge,mn),wsMask=min(wetEdge,ms),weMask=min(wetEdge,me),wwMask=min(wetEdge,mw),localFlux=(wnMask*(n-h)+wsMask*(s-h)+weMask*(e-h)+wwMask*(ww-h))*.25;h+=clamp(strength,0.,.95)*localFlux;h=mix(h,.5,clamp(wetEdge*waterLevelDose,0.,1.));w=max(w,.985*wetEdge);}
+        else if(mode<4.5){contactMask=0.;}
+        else if(mode<5.5){vec2 pathPoint;float pathStrength;float normalizedDistance=fingertipDistance(px,pathPoint,pathStrength)/max(radius,.001);contactMask=max(contactMask,1.-step(.72,normalizedDistance));}
+        else{contactSurface=0.;}
+        outColor=vec4(h-.5,w,contactSurface,contactMask);}`;
+    const renderFs=`#version 300 es
+      precision highp float;uniform sampler2D field;uniform vec2 size;uniform float time;in vec2 uv;out vec4 outColor;
+      float hash(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
+      float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.),f.x),f.y);}
+      float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*noise(p);p=mat2(1.63,1.17,-1.17,1.63)*p+7.1;a*=.5;}return v;}
+      void main(){vec2 q=1./size;vec4 c=texture(field,uv);float h=c.r+.5,w=c.g;
+        float l=texture(field,uv-vec2(q.x,0)).r+.5,r=texture(field,uv+vec2(q.x,0)).r+.5,u=texture(field,uv+vec2(0,q.y)).r+.5,d=texture(field,uv-vec2(0,q.y)).r+.5;
+        vec2 grad=vec2(l-r,d-u);vec3 N=normalize(vec3(grad*40.,1.));vec3 L=normalize(vec3(-.46,.34,.82));vec3 V=vec3(0,0,1);
+        float diffuse=max(dot(N,L),0.),avg=(l+r+u+d)*.25,localBasin=max(avg-h,0.);
+        float cavity=clamp((h-avg)*28.,-.15,.11),occlusion=clamp(localBasin*5.2,0.,.09),slope=length(grad)*44.,shelteredFloor=smoothstep(.006,.045,localBasin)*(1.-smoothstep(.24,.76,slope));
+        vec2 sandPx=uv*size,grainPx=mat2(.819,.574,-.574,.819)*sandPx;float broad=fbm(sandPx*.013),mottle=fbm(mat2(.78,.63,-.63,.78)*sandPx*.055+19.7),fine=noise(grainPx*.67),grain=hash(floor(grainPx*1.21)+vec2(7.3,19.1));
+        vec3 dry=mix(vec3(.59,.40,.20),vec3(.82,.62,.34),broad*.62+mottle*.22);dry+=vec3(.055,.035,.012)*(fine-.5)*(1.-shelteredFloor*.62);
+        float mineralDark=step(.982,grain)*(1.-shelteredFloor*.58),mineralLight=step(.991,hash(floor(mat2(.34,-.94,.94,.34)*sandPx*1.43)+31.))*(1.-shelteredFloor*.68);dry=mix(dry,vec3(.18,.14,.10),mineralDark*.38);dry=mix(dry,vec3(.96,.84,.59),mineralLight*.44);dry=mix(dry,dry*vec3(.92,.93,.94),shelteredFloor*.56);
+        float disturbed=smoothstep(.12,.75,slope)*(1.-smoothstep(.92,1.,w));float loose=step(.93,hash(floor(grainPx*1.73)+vec2(h*900.,17.)))*disturbed;
+        vec3 col=dry*(.52+.58*diffuse);col+=cavity-occlusion;col+=loose*vec3(.12,.09,.045);
+        vec3 wetBase=mix(col,vec3(.255,.205,.145),.66);col=mix(col,wetBase,w*.88);
+        float wetSpec=pow(max(dot(reflect(-L,N),V),0.),26.)*w*(.24+.76*smoothstep(.03,.35,slope));col+=wetSpec*.42;
+        float sparkle=step(.9965,hash(floor(sandPx*1.12)+floor(time*.5)))*pow(max(dot(reflect(-L,N),V),0.),18.)*(1.-w);col+=sparkle*.7;
+        col*=.965+.055*noise(mat2(.42,-.91,.91,.42)*sandPx*.27);col=pow(max(col,0.),vec3(.94));outColor=vec4(col,1.);}`;
+    const fallbackRenderFs=`#version 300 es
+      precision highp float;uniform sampler2D field;uniform vec2 size;uniform float time;in vec2 uv;out vec4 outColor;
+      float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+      void main(){vec2 q=1./size;vec4 c=texture(field,uv);float h=c.r+.5,l=texture(field,uv-vec2(q.x,0)).r+.5,r=texture(field,uv+vec2(q.x,0)).r+.5,u=texture(field,uv+vec2(0,q.y)).r+.5,d=texture(field,uv-vec2(0,q.y)).r+.5;vec3 N=normalize(vec3((l-r)*19.,(d-u)*19.,1.));vec3 L=normalize(vec3(-.48,-.62,.82));float light=clamp(dot(N,L),0.,1.);float cavity=clamp((h-(l+r+u+d)*.25)*32.,-.16,.16);vec3 dry=vec3(.73,.52,.28),sun=vec3(.88,.70,.42),wet=vec3(.29,.23,.16);float grain=(hash(floor(uv*size*1.15))-.5)*.018;vec3 col=mix(dry,sun,light*.7);col=mix(col,wet,c.g*.72);col+=(light-.5)*.14+cavity+grain*(1.-c.g*.55);float spark=step(.9975,hash(floor(uv*size*.72)+floor(time*.7)))*pow(max(dot(reflect(-L,N),vec3(0,0,1)),0.),14.)*(1.-c.g);col+=spark*.55;outColor=vec4(col,1.);}`;
+    function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
+    function program(fs){const p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,vs));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,fs));gl.bindAttribLocation(p,0,"p");gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p}
+    const up=program(updateFs);let draw;try{draw=program(renderFs)}catch(e){draw=program(fallbackRenderFs)}const quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+    let tex=[],fb=[],front=0,SW=1,SH=1;
+    function makeTex(){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,SW,SH,0,gl.RGBA,gl.FLOAT,null);return t}
+    function initField(){tex.forEach(t=>gl.deleteTexture(t));fb.forEach(f=>gl.deleteFramebuffer(f));tex=[makeTex(),makeTex()];fb=tex.map(t=>{const f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);return f});const data=new Float32Array(SW*SH*4);tex.forEach(t=>{gl.bindTexture(gl.TEXTURE_2D,t);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,SW,SH,gl.RGBA,gl.FLOAT,data)});front=0}
+    function loc(p,n){return gl.getUniformLocation(p,n)}
+    const gridCellSpan=()=>Math.max(W/SW,H/SH);
+    const escapePassCount=radius=>Math.max(3,Math.ceil(radius/Math.max(.001,Math.min(W/SW,H/SH))*1.1)+3);
+    function localTransportPadding(radius){
+      const reachablePasses=escapePassCount(radius)+debugParams.settlingPasses;
+      return radius*.75+(reachablePasses+4)*gridCellSpan();
+    }
+    function pass(mode,a,b,radius,strength,wy,phase,control,strokePath,levelDose=0){
+      const back=1-front,c=control||a,path=(strokePath&&strokePath.length?strokePath:[a,b]).slice(0,32),flat=new Float32Array(64),pathStrengths=new Float32Array(32);
+      for(let i=0;i<path.length;i++){flat[i*2]=path[i].x;flat[i*2+1]=path[i].y;pathStrengths[i]=Number.isFinite(path[i].strength)?path[i].strength:strength}
+      const localPass=mode<1.5||(mode<2.5&&radius>0)||(mode>=3.5&&mode<6.5);let minX=0,minY=0,maxX=SW,maxY=SH;
+      if(localPass){
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER,fb[front]);gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,fb[back]);gl.blitFramebuffer(0,0,SW,SH,0,0,SW,SH,gl.COLOR_BUFFER_BIT,gl.NEAREST);gl.bindFramebuffer(gl.FRAMEBUFFER,fb[back]);
+        const padding=localTransportPadding(radius);minX=Math.max(0,Math.floor((Math.min(...path.map(p=>p.x))-padding)/W*SW));maxX=Math.min(SW,Math.ceil((Math.max(...path.map(p=>p.x))+padding)/W*SW));minY=Math.max(0,Math.floor((H-Math.max(...path.map(p=>p.y))-padding)/H*SH));maxY=Math.min(SH,Math.ceil((H-Math.min(...path.map(p=>p.y))+padding)/H*SH));
+        gl.enable(gl.SCISSOR_TEST);gl.scissor(minX,minY,Math.max(1,maxX-minX),Math.max(1,maxY-minY));
+      }else gl.bindFramebuffer(gl.FRAMEBUFFER,fb[back]);
+      const motionX=b.x-a.x,motionY=-(b.y-a.y),motionLength=Math.hypot(motionX,motionY)||1;gl.useProgram(up);gl.viewport(0,0,SW,SH);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex[front]);gl.uniform1i(loc(up,"src"),0);gl.uniform2f(loc(up,"size"),W,H);gl.uniform4f(loc(up,"updateBounds"),minX,minY,maxX,maxY);gl.uniform2f(loc(up,"a"),a.x,a.y);gl.uniform2f(loc(up,"b"),b.x,b.y);gl.uniform2f(loc(up,"cpoint"),c.x,c.y);gl.uniform2f(loc(up,"motionDir"),motionX/motionLength,motionY/motionLength);gl.uniform2fv(loc(up,"strokePoints[0]"),flat);gl.uniform1fv(loc(up,"strokeStrengths[0]"),pathStrengths);gl.uniform1i(loc(up,"strokePointCount"),path.length);gl.uniform1f(loc(up,"radius"),radius);gl.uniform1f(loc(up,"strength"),strength);gl.uniform1f(loc(up,"mode"),mode);gl.uniform1f(loc(up,"waterY"),wy);gl.uniform1f(loc(up,"waterPhase"),phase||0);gl.uniform1f(loc(up,"waveSeed"),waveSpec.seed);gl.uniform1f(loc(up,"waveAmp"),waveSpec.amp);gl.uniform1f(loc(up,"baselineY"),baselineY);gl.uniform1f(loc(up,"wetFront"),wetFront);gl.uniform1f(loc(up,"reposeAngle"),debugParams.reposeAngle);gl.uniform1f(loc(up,"grooveDepth"),debugParams.grooveDepth);gl.uniform1f(loc(up,"profileCurvature"),debugParams.profileCurvature);gl.uniform1f(loc(up,"forwardPush"),debugParams.forwardPush);gl.uniform1f(loc(up,"waterLevelDose"),levelDose);gl.drawArrays(gl.TRIANGLES,0,6);if(localPass)gl.disable(gl.SCISSOR_TEST);front=back
+    }
+    function shouldUpdateShellTrail(distance,wait,radius){return distance>=Math.max(3,radius*debugParams.fingerStep)||(wait>=.05&&distance>=.75)}
+    function updateShellTrail(point,radius,dt){if(!shellTrailPoint){shellTrailPoint=point;shellTrailWait=0;return}shellTrailWait+=dt;const distance=Math.hypot(point.x-shellTrailPoint.x,point.y-shellTrailPoint.y);if(distance>Math.max(radius*.35,420*shellTrailWait+4)){shellTrailPoint=point;shellTrailWait=0;return}if(!shouldUpdateShellTrail(distance,shellTrailWait,radius))return;const from=shellTrailPoint;shellTrailPoint=point;shellTrailWait=0;displaceShellTrail(from,point,radius)}
+    function shellTrailRadius(radius){return radius*debugParams.scallopGrooveRadius}
+    function shellTrailStrength(radius){return .13*debugParams.scallopRoundness*debugParams.scallopGrooveDepth*radius/Math.max(1,fingerRadius())}
+    function displaceShellTrail(a,b,radius){const grooveRadius=shellTrailRadius(radius),strength=shellTrailStrength(grooveRadius);if(strength<=0)return;const path=boundedPath(resamplePolyline([a,b],Math.max(2,grooveRadius*debugParams.fingerStep),true));if(path.length<2)return;displaceFingertip(path[0],path[path.length-1],grooveRadius,strength,path[0],path)}
+    function displaceFingertip(a,b,radius,strength,control,strokePath){const escapePasses=escapePassCount(radius);pass(5,a,b,radius,strength,0,0,control,strokePath);pass(0,a,b,radius,strength,0,0,control,strokePath);for(let i=0;i<escapePasses;i++)pass(1,a,b,radius,strength,0,0,control,strokePath);for(let i=0;i<debugParams.settlingPasses;i++)pass(2,a,b,radius,.45,0,0,control,strokePath);pass(6,a,b,radius,0,0,0,control,strokePath);pass(4,a,b,radius,0,0,0,control,strokePath);restoreActiveContactMasks()}
+    function restoreActiveContactMasks(){const radius=fingerRadius();for(const p of pointers.values()){const q={x:p.x,y:p.y,strength:p.depthStrength};pass(5,q,q,radius,p.depthStrength,0,0,q,[q])}}
+    function refreshContactMasks(clearPoints=[]){const radius=fingerRadius();for(const q of clearPoints)pass(4,q,q,radius,0,0,0,q,[q]);for(const p of pointers.values()){const q={x:p.x,y:p.y,strength:p.depthStrength};pass(5,q,q,radius,p.depthStrength,0,0,q,[q])}}
+    function readField(){const pixels=new Float32Array(SW*SH*4);gl.bindFramebuffer(gl.FRAMEBUFFER,fb[front]);gl.readPixels(0,0,SW,SH,gl.RGBA,gl.FLOAT,pixels);gl.bindFramebuffer(gl.FRAMEBUFFER,null);for(let i=0;i<SW*SH;i++)pixels[i*4]+=.5;return{width:SW,height:SH,displayWidth:W,displayHeight:H,pixels}}
+    if(testMode)window.__beachTest={reset:initField,field:readField,stroke(a,b,control,radius=20,strength=.13){const path=boundedPath(resamplePolyline([a,b],radius*debugParams.fingerStep,true));displaceFingertip(a,b,radius,strength,control,path);return readField()},traceStroke(a,b,control,radius=20,strength=.13){const path=boundedPath(resamplePolyline([a,control,b],radius*debugParams.fingerStep,true));displaceFingertip(a,b,radius,strength,control,path);return readField()},setField(data){if(data.length!==SW*SH*4)throw Error("field size mismatch");const encoded=new Float32Array(data);for(let i=0;i<SW*SH;i++)encoded[i*4]-=.5;for(const t of tex){gl.bindTexture(gl.TEXTURE_2D,t);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,SW,SH,gl.RGBA,gl.FLOAT,encoded)}front=0},seed(value,forceFull=false){testSeed=value>>>0;waveSpec=newWaveSpec(forceFull);waveAge=0;previousWaveF=0},wash(seconds,steps=60,relaxRate=debugParams.waterRelax,levelRate=debugParams.waterLevelPull){const dt=seconds/steps,levelDose=1-Math.exp(-dt*levelRate);for(let i=0;i<steps;i++){const f=(i+1)/steps,eased=f*f*(3-2*f),phase=.38+.23*f;waterTop=H+58-eased*(H+58)*waveSpec.reach;waterPhase=phase;pass(3,{x:0,y:0},{x:0,y:0},0,1-Math.exp(-dt*relaxRate),waterTop,phase,undefined,undefined,levelDose)}return readField()},relaxAll(seconds,steps=120,relaxRate=debugParams.waterRelax,levelRate=debugParams.waterLevelPull){const dt=seconds/steps,levelDose=1-Math.exp(-dt*levelRate);for(let i=0;i<steps;i++)pass(3,{x:0,y:0},{x:0,y:0},0,1-Math.exp(-dt*relaxRate),-H*2,.5,undefined,undefined,levelDose);return readField()},relaxSteps(steps,rate,dt=1/60,levelRate=debugParams.waterLevelPull){const strength=1-Math.exp(-dt*rate),levelDose=1-Math.exp(-dt*levelRate);for(let i=0;i<steps;i++)pass(3,{x:0,y:0},{x:0,y:0},0,strength,-H*2,.5,undefined,undefined,levelDose);return readField()},initialContactDecision(moved,speed,elapsed,radius=20,medium="sand"){return{ready:moved||elapsed>0,strength:moved?movingStrength(speed,radius,medium):stationaryStrength(0,elapsed,radius,medium)}},depthAfterTravel(start,speed,distance,radius=20,medium="sand"){return advanceStrength(start,movingStrength(speed,radius,medium),distance,radius*debugParams.depthTransition)},debugValues(){return{...debugParams}},startupWave(){return{delay:startupWaveDelay,reach:waveSpec.reach}},renderScene(time=4){clock=time;render(clock)},renderWater(f=.8,time=4){clock=time;waterPhase=.38+.23*f;waterTop=H+58-f*(H+58)*waveSpec.reach;drawWater({f,t:waterPhase})},settings:{open(){setShellOpen(true)},close(){setShellOpen(false)},isOpen(){return!settingsPanel.hidden},shellPose(){return{...shellMotion}},boundaryVelocity(velocity,clearance,inward,dt=.016){return softenBoundaryVelocity(velocity,clearance,inward,dt)},shellTrailProfile(radius=60){const grooveRadius=shellTrailRadius(radius),strength=shellTrailStrength(grooveRadius);return{radius:grooveRadius,strength,slope:strength/grooveRadius,fingerSlope:.13/fingerRadius()}},shellTrailDue(distance,wait,radius=60){return shouldUpdateShellTrail(distance,wait,radius)},shellPressState(){return{owner:shellPress.owner,contacts:shellPress.contacts.size,targetX:shellPress.targetX,targetY:shellPress.targetY,x:shellPress.x,y:shellPress.y,sandPointers:pointers.size}},stopShell(){shellMotion.vx=0;shellMotion.vy=0;shellMotion.angularVelocity=0},pushShellStroke(dx=30,dy=0,offset=.25){const rect=settingsButton.getBoundingClientRect(),cx=(rect.left+rect.right)/2,cy=(rect.top+rect.bottom)/2,radius=Math.min(rect.width,rect.height)*.48;return pushShellFromStroke(cx-dx,cy+radius*offset-dy,cx,cy+radius*offset,16)},values(){return{sound:soundLevel,haptics:hapticsLevel,size:brushScale}},set(name,value){const input={sound:soundSlider,haptics:hapticsSlider,size:sizeSlider}[name];if(!input)throw Error("unknown setting");input.value=String(value);input.dispatchEvent(new Event("input"))}}};
+    if(testMode){window.__beachTest.pathStroke=(points,radius=20,strength=.13)=>{const path=boundedPath(resamplePolyline(points,radius*debugParams.fingerStep,true)),first=path[0],last=path[path.length-1];displaceFingertip(first,last,radius,strength,first,path);return readField()};window.__beachTest.frameStroke=(a,b,first=false,last=false,radius=20,strength=.13)=>{const path=boundedPath(resamplePolyline([a,b],radius*debugParams.fingerStep,true));displaceFingertip(a,b,radius,strength,a,path);return readField()};window.__beachTest.stationaryTouches=(point,durations,radius=20)=>{for(const duration of durations){const strength=stationaryStrength(0,duration,radius,"sand"),q={x:point.x,y:point.y,strength};displaceFingertip(q,q,radius,strength,q,[q])}return readField()};window.__beachTest.localTransportPadding=localTransportPadding;window.__beachTest.resamplePath=(points,radius=20)=>resamplePolyline(points,radius*debugParams.fingerStep);window.__beachTest.waterStep=(waterY,phase,relaxRate,recoveryRate,dt=1/60)=>{pass(3,{x:0,y:0},{x:0,y:0},0,1-Math.exp(-dt*relaxRate),waterY,phase,undefined,undefined,1-Math.exp(-dt*recoveryRate));return readField()};window.__beachTest.crestAt=(x,waterY,phase)=>waterY+crestOffset(x,phase);window.__beachTest.dryRelaxSteps=(steps,rate,dt=1/60)=>{const strength=1-Math.exp(-dt*rate);for(let i=0;i<steps;i++)pass(2,{x:0,y:0},{x:0,y:0},0,strength,0,0);return readField()}}
+    function render(t){gl.useProgram(draw);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,hc.width,hc.height);gl.bindTexture(gl.TEXTURE_2D,tex[front]);gl.uniform1i(loc(draw,"field"),0);gl.uniform2f(loc(draw,"size"),SW,SH);gl.uniform1f(loc(draw,"time"),t);gl.drawArrays(gl.TRIANGLES,0,6)}
+
+    function resize(){const r=root.getBoundingClientRect();W=Math.max(1,r.width);H=Math.max(1,r.height);dpr=Math.min(devicePixelRatio||1,2);hc.width=Math.round(W*dpr);hc.height=Math.round(H*dpr);wc.width=Math.round(W*dpr);wc.height=Math.round(H*dpr);wave.setTransform(dpr,0,0,dpr,0,0);baselineY=H*.5;if(!Number.isFinite(wetFront)||wetFront<=1)wetFront=baselineY;else wetFront=Math.min(wetFront,baselineY);const scale=Math.min(1,640/W);SW=Math.max(240,Math.round(W*scale));SH=Math.max(320,Math.round(H*scale));initField()}
+    function random01(){if(!testMode)return Math.random();testSeed=(1664525*testSeed+1013904223)>>>0;return testSeed/4294967296}
+    function newWaveSpec(forceFull=false,allowFull=true){const full=forceFull||(allowFull&&random01()<.14);return{seed:random01()*40,amp:7+random01()*9,reach:full?1.03+random01()*.1:.48+random01()*.34,duration:20+random01()*8}}
+    function waveState(){const t=waveAge/waveSpec.duration;let f=0;if(t>.38&&t<.61)f=(t-.38)/.23;else if(t>=.61&&t<.84)f=1-(t-.61)/.23;const eased=f*f*(3-2*f);waterTop=H+58-eased*(H+58)*waveSpec.reach;return{t,f:eased}}
+    function crestOffset(x,t){return Math.sin(x*(.018+(waveSpec.seed*.17%1)*.016)+t*6.7+waveSpec.seed)*waveSpec.amp+Math.sin(x*(.052+(waveSpec.seed*.31%1)*.025)-t*5.3+waveSpec.seed*2.1)*waveSpec.amp*.46+Math.sin(x*.117+t*9.1-waveSpec.seed*.7)*waveSpec.amp*.18}
+    function wavePath(y,t,offset){wave.beginPath();wave.moveTo(-20,H+30);wave.lineTo(-20,y);for(let x=-20;x<=W+30;x+=8){wave.lineTo(x,y+crestOffset(x,t)+offset)}wave.lineTo(W+30,H+30);wave.closePath()}
+    function drawWater(st){wave.clearRect(0,0,W,H);if(st.f<=.001)return;wave.lineCap="round";wave.lineJoin="round";const grad=wave.createLinearGradient(0,waterTop-10,0,H);grad.addColorStop(0,"rgba(183,207,193,.15)");grad.addColorStop(.2,"rgba(100,155,151,.24)");grad.addColorStop(.68,"rgba(52,112,119,.34)");grad.addColorStop(1,"rgba(35,86,99,.42)");wavePath(waterTop,st.t,0);wave.fillStyle=grad;wave.fill();wave.save();wave.clip();wave.globalCompositeOperation="screen";
+      for(let i=0;i<28;i++){const x=(i*97+waveSpec.seed*71+clock*(2+i%3))%(W+120)-60,depth=22+(i*53)%Math.max(50,H-waterTop),rx=12+(i%6)*7,ry=2+(i%4)*1.4;wave.globalAlpha=.018+(i%4)*.009;wave.fillStyle=i%3?"#b8d8ca":"#e2ead6";wave.beginPath();wave.ellipse(x,waterTop+depth+Math.sin(i*2.7+clock*.4)*9,rx,ry,Math.sin(i*1.3)*.45,0,Math.PI*2);wave.fill()}
+      for(let family=0;family<3;family++)for(let i=0;i<5;i++){const depth=28+i*58+family*19,drift=clock*(.25+family*.17);wave.globalAlpha=.018+(i%3)*.008;wave.strokeStyle=family===1?"#9fcac2":"#d6e3d1";wave.lineWidth=.55+(i%2)*.42;wave.beginPath();for(let x=-30;x<W+30;x+=9){const y=waterTop+depth+Math.sin(x*(.011+family*.007)+drift+i*1.9)*10+Math.sin(x*.047-drift*1.6+i)*3;x===-30?wave.moveTo(x,y):wave.lineTo(x,y)}wave.stroke()}wave.restore();
+      const foamWidth=10+waveSpec.amp*.38;wavePath(waterTop,st.t,1);wave.globalAlpha=.18;wave.strokeStyle="rgba(230,232,210,.72)";wave.lineWidth=foamWidth+10;wave.stroke();
+      for(let patch=0;patch<42;patch++){const x=(patch*79+waveSpec.seed*61+clock*(.8+patch%3))%(W+70)-35,gate=Math.sin(patch*17.13+waveSpec.seed*3.7);if(gate<-.42)continue;const depth=2+((patch*37)%23),y=waterTop+depth+crestOffset(x,st.t)*(.82-depth*.012)+Math.sin(patch*2.3+clock*.7)*3.2,rx=3+(patch%8)*1.9,ry=.8+(patch%4)*.55;wave.globalAlpha=.28+(patch%5)*.1;wave.strokeStyle=patch%3?"#fffbe8":"#e6ead8";wave.lineWidth=.8+(patch%3)*.55;wave.beginPath();wave.ellipse(x,y,rx,ry,Math.sin(patch)*.32,0,Math.PI*2);wave.stroke();if(patch%4===0){wave.globalAlpha*=.45;wave.fillStyle="#fffbe8";wave.fill()}}
+      wave.fillStyle="#fffbe8";for(let i=0;i<68;i++){const x=(i*71+waveSpec.seed*53+clock*(1+i%3))%(W+40)-20;if(Math.sin(i*12.7+waveSpec.seed)<-.2)continue;const y=waterTop+2+(i*29)%26+crestOffset(x,st.t)*.76+Math.sin(i*1.7+clock)*2.5,radius=.5+(i%5)*.42;wave.globalAlpha=.24+(i%4)*.11;wave.beginPath();wave.arc(x,y,radius,0,Math.PI*2);wave.fill()}wave.globalAlpha=1;wave.globalCompositeOperation="source-over"}
+
+    function ensureAudio(){if(soundLevel<=0)return;if(!ac){ac=new(window.AudioContext||window.webkitAudioContext)();const buf=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate),d=buf.getChannelData(0);let z=0;for(let i=0;i<d.length;i++){z=z*.72+(Math.random()*2-1)*.28;d[i]=z*.24}sandGain=ac.createGain();sandGain.gain.value=0;sandFilter=ac.createBiquadFilter();sandFilter.type="bandpass";sandFilter.frequency.value=230;sandFilter.Q.value=.55;const sandSource=ac.createBufferSource();sandSource.buffer=buf;sandSource.loop=true;sandSource.connect(sandFilter).connect(sandGain).connect(ac.destination);sandPreviewGain=ac.createGain();sandPreviewGain.gain.value=0;sandPreviewFilter=ac.createBiquadFilter();sandPreviewFilter.type="bandpass";sandPreviewFilter.frequency.value=230;sandPreviewFilter.Q.value=.55;sandSource.connect(sandPreviewFilter).connect(sandPreviewGain).connect(ac.destination);sandSource.start();waveGain=ac.createGain();waveGain.gain.value=0;const waveFilter=ac.createBiquadFilter();waveFilter.type="lowpass";waveFilter.frequency.value=650;const waveSource=ac.createBufferSource();waveSource.buffer=buf;sandSource.loop=true;waveSource.loop=true;waveSource.playbackRate.value=.56;waveSource.connect(waveFilter).connect(waveGain).connect(ac.destination);waveSource.start();splashGain=ac.createGain();splashGain.gain.value=0;splashFilter=ac.createBiquadFilter();splashFilter.type="bandpass";splashFilter.frequency.value=720;splashFilter.Q.value=.7;const splashSource=ac.createBufferSource();splashSource.buffer=buf;splashSource.loop=true;splashSource.playbackRate.value=1.12;splashSource.connect(splashFilter).connect(splashGain).connect(ac.destination);splashSource.start()}if(ac.state==="suspended")ac.resume()}
+    function shellPressIsSubmerged(){if(shellPress.owner===null)return false;const contact=shellPress.contacts.get(shellPress.owner);if(!contact)return false;const rect=root.getBoundingClientRect(),x=contact.x-rect.left,y=contact.y-rect.top;return y>crestY(x)}
+    function movingMedium(now){let sand=false,water=shellPressIsSubmerged();for(const p of pointers.values()){const submerged=p.y>crestY(p.x);if(submerged)water=true;else if(p.movingUntil>now)sand=true}return water?"water":sand?"sand":""}
+    function liveFingerSpeed(now,medium){let speed=0;for(const p of pointers.values()){const submerged=p.y>crestY(p.x);if(now-p.lastMoveAt<120&&((medium==="water"&&submerged)||(medium==="sand"&&!submerged)))speed=Math.max(speed,p.speed)}return speed}
+    function waterHapticStrength(now){return Math.round(72+Math.min(48,liveFingerSpeed(now,"water")*18)+Math.min(90,waveSpeed*360))}
+    function sandHapticStrengthForSpeed(speed){return Math.round(72+Math.min(140,speed*52))}
+    function sandHapticStrength(now){return sandHapticStrengthForSpeed(liveFingerSpeed(now,"sand"))}
+    function soundGainScale(channel){const maximum=1+debugParams.maxVolume*(channel==="sand"?.04:.1);return volumeScale(soundLevel,maximum)}
+    function audioLevels(st,nowMs){if(!ac)return;const now=ac.currentTime,medium=movingMedium(nowMs),sand=sandAudioParams(soundLevel>0&&medium==="sand",liveFingerSpeed(nowMs,"sand"));sandGain.gain.setTargetAtTime(sand.gain*soundGainScale("sand"),now,.035);sandFilter.frequency.setTargetAtTime(sand.frequency,now,.045);sandFilter.Q.setTargetAtTime(sand.q,now,.045);waveGain.gain.setTargetAtTime(st.f*.055*soundGainScale("water"),now,.12)}
+    function triggerWaterSplash(nowMs,speed,inWater){if(soundLevel<=0||!ac||!inWater||nowMs-lastSplashAtMs<90)return;const splash=splashAudioParams(speed);if(!splash.trigger)return;lastSplashAtMs=nowMs;const now=ac.currentTime;splashFilter.frequency.setValueAtTime(splash.frequency,now);splashGain.gain.cancelScheduledValues(now);splashGain.gain.setValueAtTime(0,now);splashGain.gain.linearRampToValueAtTime(splash.gain*soundGainScale("water"),now+splash.attack);splashGain.gain.exponentialRampToValueAtTime(.0001,now+splash.attack+splash.release)}
+    function hapticAmplitude(strength){return Math.min(255,Math.max(1,Math.round(strength*hapticsLevel*debugParams.maxVibration)))}
+    function startMoveHaptic(medium,now){if(hapticsLevel<=0||!medium)return;if(hapticMedium&&hapticMedium!==medium)stopMoveHaptic();try{if(window.AndroidHaptics){if(medium==="water"&&window.AndroidHaptics.waterStart)window.AndroidHaptics.waterStart(hapticAmplitude(waterHapticStrength(now)));else if(medium==="sand"&&window.AndroidHaptics.sandStart)window.AndroidHaptics.sandStart(hapticAmplitude(sandHapticStrength(now)));hapticMedium=medium;return}}catch(e){}if(hapticMedium===medium)return;if(navigator.vibrate){navigator.vibrate(medium==="water"?[14,8,12,10]:[6,2,5,2,7,2]);hapticMedium=medium}}
+    function stopMoveHaptic(){if(!hapticMedium)return;try{if(window.AndroidHaptics&&window.AndroidHaptics.sandStop)window.AndroidHaptics.sandStop();else if(navigator.vibrate)navigator.vibrate(0)}catch(e){}hapticMedium=""}
+    function syncHaptic(nowMs){const now=nowMs||performance.now(),medium=movingMedium(now);medium?startMoveHaptic(medium,now):stopMoveHaptic()}
+    function point(e){const r=root.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+    function beginSandPointer(e){if(!settingsPanel.hidden||!debugPanel.hidden)return;ensureAudio();const q=point(e),now=performance.now(),start={x:q.x,y:q.y,strength:0};pointers.set(e.pointerId,{x:q.x,y:q.y,raw:q,rawStrength:0,pending:[start],committed:null,remainder:0,medium:q.y>crestY(q.x)?"water":"sand",movingUntil:0,lastMoveAt:now,speed:0,hasMoved:false,depthStrength:0,settleStartStrength:0,lastSettledStrength:0,contactReady:false,clientX:e.clientX,clientY:e.clientY,lastClientAt:now});try{root.setPointerCapture(e.pointerId)}catch(error){}refreshContactMasks();syncHaptic(now)}
+    root.addEventListener("pointerdown",beginSandPointer);
+    function crestY(x){return waterTop+crestOffset(x,waterPhase)}
+    root.addEventListener("pointermove",e=>{const p=pointers.get(e.pointerId);if(!p)return;const now=performance.now(),oldPoint={x:p.x,y:p.y};pushShellFromStroke(p.clientX,p.clientY,e.clientX,e.clientY,now-p.lastClientAt);p.clientX=e.clientX;p.clientY=e.clientY;p.lastClientAt=now;const delivered=e.getCoalescedEvents?e.getCoalescedEvents():[],events=delivered.length?delivered:[e],radius=fingerRadius(),step=radius*debugParams.fingerStep,q=point(e),distance=Math.hypot(q.x-p.x,q.y-p.y),elapsed=Math.max(4,now-p.lastMoveAt),instantSpeed=distance/elapsed,filter=1-Math.exp(-elapsed/70);if(distance>.01){p.speed=p.hasMoved?p.speed+filter*(instantSpeed-p.speed):instantSpeed;p.hasMoved=true;const inWater=q.y>crestY(q.x);p.medium=inWater?"water":"sand";const target=movingStrength(p.speed,radius,p.medium),transitionDistance=radius*debugParams.depthTransition;for(const sample of events)appendResampled(p,point(sample),step,target,transitionDistance);p.depthStrength=p.rawStrength;p.settleStartStrength=p.depthStrength;p.lastSettledStrength=p.depthStrength;p.contactReady=true;p.lastMoveAt=now;p.movingUntil=now+110;ensureAudio();triggerWaterSplash(now,p.speed,inWater)}p.x=q.x;p.y=q.y;refreshContactMasks([oldPoint]);syncHaptic(now)});
+    function fingerRadius(){return Math.max(13,Math.min(W,H)*.032)*brushScale}
+    function resamplePolyline(points,step,includeEnd=false){if(!points.length)return[];step=Math.max(.001,step);const out=[{x:points[0].x,y:points[0].y}];let remainder=0;for(let i=1;i<points.length;i++){let start={x:points[i-1].x,y:points[i-1].y};const end=points[i];let dx=end.x-start.x,dy=end.y-start.y,distance=Math.hypot(dx,dy);while(remainder+distance>=step&&distance>.0001){const needed=step-remainder,t=needed/distance;start={x:start.x+dx*t,y:start.y+dy*t};out.push(start);dx=end.x-start.x;dy=end.y-start.y;distance=Math.hypot(dx,dy);remainder=0}remainder+=distance}const end=points[points.length-1],last=out[out.length-1];if(includeEnd&&Math.hypot(end.x-last.x,end.y-last.y)>.01)out.push({x:end.x,y:end.y});return out}
+    function advanceStrength(value,target,distance,transitionDistance){return target+(value-target)*Math.exp(-Math.max(0,distance)/Math.max(.001,transitionDistance))}
+    function appendResampled(p,end,step,targetStrength,transitionDistance){step=Math.max(.001,step);p.remainder=Math.min(p.remainder,step*.999);let start=p.raw,startStrength=p.rawStrength,dx=end.x-start.x,dy=end.y-start.y,distance=Math.hypot(dx,dy);while(p.remainder+distance>=step&&distance>.0001){const needed=step-p.remainder,t=needed/distance;start={x:start.x+dx*t,y:start.y+dy*t};startStrength=advanceStrength(startStrength,targetStrength,needed,transitionDistance);p.pending.push({x:start.x,y:start.y,strength:startStrength});dx=end.x-start.x;dy=end.y-start.y;distance=Math.hypot(dx,dy);p.remainder=0}startStrength=advanceStrength(startStrength,targetStrength,distance,transitionDistance);p.remainder+=distance;p.raw=end;p.rawStrength=startStrength}
+    function boundedPath(points){if(points.length<=32)return points;const path=[];for(let i=0;i<32;i++)path.push(points[Math.round(i*(points.length-1)/31)]);return path}
+    function smooth01(value){value=Math.max(0,Math.min(1,value));return value*value*(3-2*value)}
+    function maximumStrength(medium){return medium==="water"?.095:.13}
+    function movingStrength(speed,radius,medium){const maximum=maximumStrength(medium),radiiPerSecond=speed*1000/Math.max(radius,1),fast=Math.max(0,Math.min(1,(radiiPerSecond-.8)/9.2));return maximum*(1-debugParams.speedDepthEffect*smooth01(fast))}
+    function stationaryStrength(start,elapsed,radius,medium){const maximum=maximumStrength(medium);return start+(maximum-start)*smooth01(elapsed/debugParams.fingerSettleMs)}
+    function flushPointer(p){if(!p.contactReady||!p.pending.length)return;const radius=fingerRadius(),rawPath=p.committed?[p.committed,...p.pending]:p.pending,path=boundedPath(rawPath),first=path[0],last=path[path.length-1];displaceFingertip(first,last,radius,p.depthStrength,first,path);p.committed=p.pending[p.pending.length-1];p.pending=[]}
+    function flushStrokes(){const now=performance.now(),radius=fingerRadius();for(const p of pointers.values()){flushPointer(p);const stationaryFor=now-p.lastMoveAt,strength=stationaryStrength(p.settleStartStrength,stationaryFor,radius,p.medium);if(strength>p.lastSettledStrength+.00035){const q={x:p.x,y:p.y,strength};if(!p.committed){p.pending=[];p.committed=q}displaceFingertip(q,q,radius,strength,q,[q]);p.depthStrength=strength;p.rawStrength=strength;p.committed=q;p.lastSettledStrength=strength}}}
+    function end(e){const p=pointers.get(e.pointerId);pointers.delete(e.pointerId);if(p)refreshContactMasks([{x:p.x,y:p.y}]);syncHaptic()}root.addEventListener("pointerup",end);root.addEventListener("pointercancel",end);
+    const debugInputs=[...root.querySelectorAll("[data-debug]")],debugValues=[...root.querySelectorAll("[data-value]")];
+    function saveDebug(){localStorage.setItem("tactile-sand-debug",JSON.stringify(debugParams))}
+    function syncDebugUi(){for(const input of debugInputs)input.value=String(debugParams[input.dataset.debug]);for(const output of debugValues)output.value=Number(debugParams[output.dataset.value]).toFixed(2);settingsUi.style.setProperty("--shell-press-perspective",`${debugParams.shellPressPerspective}px`)}
+    function syncScreenAwake(){try{if(window.AndroidScreenAwake&&window.AndroidScreenAwake.setTimeoutMinutes)window.AndroidScreenAwake.setTimeoutMinutes(debugParams.screenAwakeMinutes)}catch(e){}}
+    syncDebugUi();syncScreenAwake();debugInputs.forEach(input=>{installIntentRange(input);input.addEventListener("input",()=>{const key=input.dataset.debug;debugParams[key]=Number(input.value);if(key==="fingerSizeMin"||key==="fingerSizeMax"){debugParams.fingerSizeMax=Math.max(debugParams.fingerSizeMin+.2,debugParams.fingerSizeMax);sizeSlider.min=String(debugParams.fingerSizeMin);sizeSlider.max=String(debugParams.fingerSizeMax);brushScale=Math.max(debugParams.fingerSizeMin,Math.min(debugParams.fingerSizeMax,brushScale));sizeSlider.value=String(brushScale);syncSliderFill(sizeSlider);localStorage.setItem("tactile-sand-size",String(brushScale))}saveDebug();syncDebugUi();if(key==="screenAwakeMinutes")syncScreenAwake()})});
+    root.querySelector(".debug-reset").addEventListener("click",()=>{debugParams={...debugDefaults};saveDebug();syncDebugUi();syncScreenAwake()});
+    root.querySelector(".debug-wave").addEventListener("click",()=>{waveSpec=newWaveSpec();waveAge=waveSpec.duration*.4;previousWaveF=0;previousWaterTop=Infinity;setDebugOpen(false)});
+    root.querySelector(".debug-big-wave").addEventListener("click",()=>{waveSpec=newWaveSpec(true);waveAge=waveSpec.duration*.4;previousWaveF=0;previousWaterTop=Infinity;setDebugOpen(false)});
+    settingsUi.addEventListener("pointerdown",e=>e.stopPropagation());debugPanel.addEventListener("pointerdown",e=>e.stopPropagation());
+    let debugHold=0,suppressSettingsClickUntil=0,lastShellMoveHaptic=0;
+    function shellPressPulse(duration,strength){if(hapticsLevel<=0)return;const amplitude=hapticAmplitude(strength);try{if(window.AndroidHaptics&&window.AndroidHaptics.pulse){window.AndroidHaptics.pulse(duration,amplitude);return}}catch(error){}if(navigator.vibrate)navigator.vibrate(duration)}
+    function updateShellPressTarget(contact){const dx=(contact.x-contact.cx)/contact.radius,dy=(contact.y-contact.cy)/contact.radius,angle=-shellMotion.angle*Math.PI/180,cos=Math.cos(angle),sin=Math.sin(angle),nx=Math.max(-1,Math.min(1,dx*cos-dy*sin)),ny=Math.max(-1,Math.min(1,dx*sin+dy*cos));shellPress.targetX=-ny*debugParams.shellPressTilt;shellPress.targetY=nx*debugParams.shellPressTilt}
+    function armShellDebugHold(contact){clearTimeout(debugHold);debugHold=setTimeout(()=>{if(shellPress.owner!==contact.id||contact.moved||!contact.inside)return;suppressSettingsClickUntil=performance.now()+450;clearShellPress();setShellOpen(false);setDebugOpen(true)},700)}
+    function promoteShellPress(){if(shellPress.owner!==null)return;for(const contact of shellPress.contacts.values()){if(!contact.inside)continue;shellPress.owner=contact.id;contact.startX=contact.x;contact.startY=contact.y;contact.moved=false;updateShellPressTarget(contact);armShellDebugHold(contact);shellPressPulse(30,.55);return}shellPress.targetX=0;shellPress.targetY=0}
+    settingsButton.addEventListener("pointerdown",e=>{if(!settingsPanel.hidden||!debugPanel.hidden)return;const collider=shellCollider(),contact={id:e.pointerId,x:e.clientX,y:e.clientY,cx:collider.x,cy:collider.y,radius:collider.radius,startX:e.clientX,startY:e.clientY,hapticX:e.clientX,hapticY:e.clientY,moved:false,inside:true};shellPress.contacts.set(e.pointerId,contact);try{settingsButton.setPointerCapture(e.pointerId)}catch(error){}if(shellPress.owner===null){shellMotion.vx=shellMotion.vy=shellMotion.angularVelocity=0;shellPress.owner=e.pointerId;updateShellPressTarget(contact);armShellDebugHold(contact);shellPressPulse(30,.55)}e.preventDefault()});
+    settingsButton.addEventListener("pointermove",e=>{const contact=shellPress.contacts.get(e.pointerId);if(!contact)return;contact.x=e.clientX;contact.y=e.clientY;contact.inside=Math.hypot(contact.x-contact.cx,contact.y-contact.cy)<=contact.radius;if(e.pointerId!==shellPress.owner){if(!contact.inside)shellPress.contacts.delete(e.pointerId);return}const travel=Math.hypot(contact.x-contact.startX,contact.y-contact.startY);if(travel>=8&&!contact.moved){contact.moved=true;clearTimeout(debugHold);suppressSettingsClickUntil=performance.now()+450}if(!contact.inside){clearTimeout(debugHold);shellPress.contacts.delete(e.pointerId);shellPress.owner=null;shellPress.targetX=0;shellPress.targetY=0;suppressSettingsClickUntil=performance.now()+450;try{settingsButton.releasePointerCapture(e.pointerId)}catch(error){}beginSandPointer(e);e.preventDefault();return}updateShellPressTarget(contact);const hapticTravel=Math.hypot(contact.x-contact.hapticX,contact.y-contact.hapticY),now=performance.now();if(hapticTravel>=4&&now-lastShellMoveHaptic>=55){lastShellMoveHaptic=now;contact.hapticX=contact.x;contact.hapticY=contact.y;shellPressPulse(16,.22)}e.preventDefault()});
+    function finishShellPress(e){const contact=shellPress.contacts.get(e.pointerId);if(!contact)return;const wasOwner=shellPress.owner===e.pointerId;shellPress.contacts.delete(e.pointerId);if(wasOwner){clearTimeout(debugHold);shellPress.owner=null;shellPress.targetX=0;shellPress.targetY=0;if(e.type==="pointercancel"||shellPress.contacts.size)suppressSettingsClickUntil=performance.now()+450;promoteShellPress()}}
+    settingsButton.addEventListener("pointerup",finishShellPress);settingsButton.addEventListener("pointercancel",finishShellPress);
+    settingsButton.addEventListener("click",e=>{e.stopPropagation();if(performance.now()<suppressSettingsClickUntil)return;if(!debugPanel.hidden){setDebugOpen(false);setShellOpen(false);return}setShellOpen(settingsPanel.hidden)});
+    document.addEventListener("pointerdown",e=>{const open=!settingsPanel.hidden||!debugPanel.hidden,inside=settingsUi.contains(e.target)||debugPanel.contains(e.target);if(open&&!inside){setShellOpen(false);setDebugOpen(false);e.preventDefault();e.stopPropagation()}},true);
+    function previewSandSound(){if(soundLevel<=0||!ac)return;const now=ac.currentTime,sand=sandAudioParams(true,.6),gain=sand.gain*soundGainScale("sand");sandPreviewFilter.frequency.setValueAtTime(sand.frequency,now);sandPreviewFilter.Q.setValueAtTime(sand.q,now);sandPreviewGain.gain.cancelScheduledValues(now);sandPreviewGain.gain.setValueAtTime(.0001,now);sandPreviewGain.gain.linearRampToValueAtTime(gain,now+.008);sandPreviewGain.gain.exponentialRampToValueAtTime(.0001,now+.085)}
+    soundSlider.addEventListener("input",()=>{const next=Number(soundSlider.value),changed=next!==soundLevel;soundLevel=next;syncSliderFill(soundSlider);localStorage.setItem("tactile-sand-sound-level",String(soundLevel));if(soundLevel>0){ensureAudio();if(changed)previewSandSound()}else if(ac){sandGain.gain.value=0;sandPreviewGain.gain.value=0;waveGain.gain.value=0;splashGain.gain.value=0}});
+    function previewHapticLevel(){if(hapticsLevel<=0)return;const amplitude=hapticAmplitude(sandHapticStrengthForSpeed(.6));try{if(window.AndroidHaptics&&window.AndroidHaptics.pulse){window.AndroidHaptics.pulse(debugParams.hapticPreviewMs,amplitude);return}}catch(e){}if(navigator.vibrate)navigator.vibrate(debugParams.hapticPreviewMs)}
+    let hapticPreviewGeneration=0,lastRenderedHapticsLevel=hapticsLevel;
+    function previewHapticAfterPaint(next){const generation=++hapticPreviewGeneration;if(next<=0){lastRenderedHapticsLevel=0;return}requestAnimationFrame(()=>requestAnimationFrame(()=>{if(generation!==hapticPreviewGeneration||next!==hapticsLevel||next===lastRenderedHapticsLevel)return;lastRenderedHapticsLevel=next;previewHapticLevel()}))}
+    hapticsSlider.addEventListener("input",()=>{const next=Number(hapticsSlider.value),changed=next!==hapticsLevel;hapticsLevel=next;syncSliderFill(hapticsSlider);localStorage.setItem("tactile-sand-haptics-level",String(hapticsLevel));if(hapticsLevel<=0)stopMoveHaptic();if(changed)previewHapticAfterPaint(next)});
+    sizeSlider.addEventListener("input",()=>{brushScale=Number(sizeSlider.value);syncSliderFill(sizeSlider);localStorage.setItem("tactile-sand-size",String(brushScale))});
+    function frame(now){if(paused)return;const dt=Math.min(.04,(now-last)/1000);last=now;clock+=dt;advanceShellPress(dt);advanceShellMotion(dt);waveAge+=dt;if(waveAge>=waveSpec.duration){waveAge=0;waveSpec=newWaveSpec();previousWaveF=0}const st=waveState();waterPhase=st.t;waveSpeed=Number.isFinite(previousWaterTop)?Math.abs(waterTop-previousWaterTop)/Math.max(1,H*dt):0;previousWaterTop=waterTop;if(st.f>.002)wetFront=Math.min(wetFront,waterTop-waveSpec.amp*1.7);else{wetFront=Math.min(baselineY,wetFront+dt*H*.065);if(baselineY-wetFront<1)wetFront=baselineY}flushStrokes();const dryDose=1-Math.exp(-dt*debugParams.dryRelax);pass(2,{x:0,y:0},{x:0,y:0},0,dryDose,0,0);if(st.f>.002){const erosionDose=1-Math.exp(-dt*debugParams.waterRelax),levelDose=1-Math.exp(-dt*debugParams.waterLevelPull);pass(3,{x:0,y:0},{x:0,y:0},0,erosionDose,waterTop,waterPhase,undefined,undefined,levelDose)}previousWaveF=st.f;render(clock);drawWater(st);syncHaptic(now);audioLevels(st,now);raf=requestAnimationFrame(frame)}
+    function pause(){paused=true;cancelAnimationFrame(raf);setShellOpen(false);setDebugOpen(false);const held=[...pointers.values()].map(p=>({x:p.x,y:p.y}));pointers.clear();if(held.length)refreshContactMasks(held);stopMoveHaptic();if(ac){sandGain.gain.value=0;sandPreviewGain.gain.value=0;waveGain.gain.value=0;splashGain.gain.value=0;ac.suspend()}try{if(window.AndroidHaptics)window.AndroidHaptics.cancel()}catch(e){}}
+    function resume(){if(!paused)return;paused=false;last=performance.now();if(ac&&soundLevel>0)ac.resume();raf=requestAnimationFrame(frame)}
+    window.__tactileSandPause=pause;window.__tactileSandResume=resume;document.addEventListener("visibilitychange",()=>document.hidden?pause():resume());
+    addEventListener("resize",resize);resize();raf=requestAnimationFrame(frame);
+  })();
+  </script>
+</div>
+
+<script id="codex-visualization-floating-ui-core" src="https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js"></script>
+<script id="codex-visualization-floating-ui-dom" src="https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js"></script>
+<script id="codex-visualization-lucide" async src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js"></script>
+<script id="codex-visualization-tooltip">/* oxlint-disable typescript/no-unsafe-argument, typescript/no-unsafe-call, typescript/no-unsafe-return */
+// Runs inside the visualization sandbox, not the host webview.
+(() => {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set(["top", "right", "bottom", "left"]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+
+  const getTrigger = (target) =>
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest("[data-tooltip]")
+      : null;
+  const containsTarget = (trigger, target) =>
+    target?.nodeType != null && trigger.contains(target);
+  const getContent = (trigger) =>
+    trigger.getAttribute("data-tooltip")?.trim() ?? "";
+  const getPlacement = (trigger) => {
+    const placement = trigger.getAttribute("data-tooltip-placement");
+    return tooltipPlacements.has(placement) ? placement : "top";
+  };
+  const getTooltip = () => {
+    if (tooltip == null) {
+      tooltip = document.createElement("div");
+      tooltip.id = tooltipId;
+      tooltip.className = "tooltip";
+      tooltip.setAttribute("role", "tooltip");
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) => {
+    const ids = new Set(
+      (trigger.getAttribute("aria-describedby") ?? "")
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute("aria-describedby");
+    } else {
+      trigger.setAttribute("aria-describedby", [...ids].join(" "));
+    }
+  };
+  const clearOpenTimeout = () => {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) => {
+    clearOpenTimeout();
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) => {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              "--tooltip-available-width",
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              "--tooltip-available-height",
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: "fixed",
+    })
+      .then(({ x, y }) => {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = "visible";
+      })
+      .catch(() => {
+        if (activeTrigger === trigger && request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) => {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = "hidden";
+    floating.style.transform = "translate(0, 0)";
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () => {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) => {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() < skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() => {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) => {
+    if (event.pointerType === "touch") {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handleLeave = (event) => {
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) => {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(":focus-visible")) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) => {
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () => {
+    closeTooltip(false);
+    document.removeEventListener("pointerover", handlePointerOpen);
+    document.removeEventListener("pointerout", handleLeave);
+    document.removeEventListener("focusin", handleFocusIn);
+    document.removeEventListener("focusout", handleLeave);
+    document.removeEventListener("keydown", handleKeyDown);
+    document.removeEventListener("contextmenu", handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener("pointerover", handlePointerOpen);
+  document.addEventListener("pointerout", handleLeave);
+  document.addEventListener("focusin", handleFocusIn);
+  document.addEventListener("focusout", handleLeave);
+  document.addEventListener("keydown", handleKeyDown);
+  document.addEventListener("contextmenu", handleContextMenu);
+  window.addEventListener("pagehide", destroy, { once: true });
+})();
+</script>
+<script id="codex-visualization-lucide-initialization">(() => {
+  const initialize = () => {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById("codex-visualization-lucide")
+    ?.addEventListener("load", initialize, { once: true });
+})();
+</script>
+</body>
+</html>
